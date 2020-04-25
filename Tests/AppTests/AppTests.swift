@@ -23,10 +23,16 @@ final class AppTests: XCTestCase {
     /// MARK: Tests
     
     func testCreateCompany() throws {
-        let someID = UUID()
-        let company = Company(id: someID, name: "Hello")
+        
+        let company = Company(id: nil, name: "Hello")
         try company.save(on: app.db).wait()
-        let fetchedCompany = try Company.find(someID, on: app.db).wait()
+        let fetchedCompany = try Company.find(company.id, on: app.db).wait()
         XCTAssertNotNil(fetchedCompany)
+        
+        let Product1 = Product(id: nil, name: "product 1", company_id: company.id!)
+        try Product1.save(on: app.db).wait()
+        print(Product1.$company.name)
+        XCTAssertNotNil(Product1.$company)
+
     }
 }
