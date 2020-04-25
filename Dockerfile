@@ -4,6 +4,10 @@
 FROM vapor/swift:latest as build
 WORKDIR /build
 
+# Install sqlite3
+RUN apt-get update -y \
+	&& apt-get install -y libsqlite3-dev
+
 # First just resolve dependencies.
 # This creates a cached layer that can be reused 
 # as long as your Package.swift/Package.resolved

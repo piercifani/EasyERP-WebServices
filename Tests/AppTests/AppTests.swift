@@ -10,6 +10,8 @@ final class AppTests: XCTestCase {
         try super.setUpWithError()
         app = Application(.testing)
         try configure(app)
+        try app.boot()
+        try app.autoMigrate().wait()
     }
     
     override func tearDownWithError() throws {
