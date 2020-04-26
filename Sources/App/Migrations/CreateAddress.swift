@@ -1,7 +1,7 @@
 import Foundation
 import Fluent
 
-struct CreateCompany: Migration {
+struct CreateAddress: Migration {
     // Prepares the database for storing Galaxy models.
     func prepare(on database: Database) -> EventLoopFuture<Void> {
         database.schema("address")

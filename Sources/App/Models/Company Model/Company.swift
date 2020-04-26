@@ -12,10 +12,6 @@ final class Company: Model {
     // The Company's name.
     @Field(key: "name")
     var name: String
-
-   // companyAddressID
-    @Field(key: "companyAddressId")
-    var companyAddressId: UUID?
     
     // The Company VAT number.
     @Field(key: "companyVatNumber")
@@ -23,7 +19,7 @@ final class Company: Model {
     
     // Creation Date.
     @Field(key: "creationDate")
-    var creationDate: NSDate
+    var creationDate: String
     
     // mainCurrency
     @Field(key: "mainCurrency")
@@ -33,6 +29,10 @@ final class Company: Model {
        @Field(key: "mainLanguage")
        var mainLanguage: String
     
+    
+    @Siblings(through: addressToCompany.self, from: \.$companyId, to: \.$addressId)
+    var companyAddresID: [Address]
+    
     // Creates a new, empty Company.
     init() { }
 
@@ -40,8 +40,7 @@ final class Company: Model {
         self.id = id
         self.name = name
         self.companyVatNumber = companyVatNumber
-        self.companyAddressId = UUID()
-        self.creationDate = NSDate()
+        self.creationDate = "01/01/2020"
         self.mainCurrency = mainCurrency
         self.mainLanguage = mainLanguage
     }

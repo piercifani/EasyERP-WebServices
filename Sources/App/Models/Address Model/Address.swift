@@ -33,6 +33,10 @@ final class Address: Model {
     @Field(key: "countryCode")
     var contryCode: String
     
+    @Siblings(through: addressToCompany.self, from: \.$addressId, to: \.$companyId)
+    var companyId: [Company]
+    
+    
     // Creates a new, empty Address.
     init() { }
 

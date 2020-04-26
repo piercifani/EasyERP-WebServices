@@ -11,7 +11,12 @@ public func configure(_ app: Application) throws {
     app.migrations.add(CreateCompany())
     app.migrations.add(CreateProduct())
     app.migrations.add(CreateAddress())
-
+    app.migrations.add(CreateAddressToCompany())
+    app.migrations.add(CreateContactInfo())
+    app.migrations.add(CreateCustomer())
+    app.migrations.add(CreatePaymentMethods())
+    app.migrations.add(CreateTaxType())
+    
     // register routes
     try routes(app)
 }
