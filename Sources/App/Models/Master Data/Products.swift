@@ -5,11 +5,11 @@ final class Product: Model {
     // Name of the table or collection.
     static let schema = "products"
 
-    // Unique identifier for this Company.
+    // Unique identifier for this product.
     @ID(key: .id)
     var id: UUID?
 
-    // The Company's name.
+    // product name.
     @Field(key: "name")
     var name: String
 
