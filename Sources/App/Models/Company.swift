@@ -13,10 +13,12 @@ final class Company: Model {
     @Field(key: "name")
     var name: String
 
-    // Creates a new, empty Galaxy.
+    @Children(for: \.$company)
+    var products: [Product]
+
     init() { }
 
-    init(id: UUID?, name: String) {
+    init(id: UUID? = nil, name: String) {
         self.id = id
         self.name = name
     }

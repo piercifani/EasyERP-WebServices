@@ -2,6 +2,7 @@ import Foundation
 import Fluent
 
 final class Product: Model {
+    
     // Name of the table or collection.
     static let schema = "products"
 
@@ -14,12 +15,11 @@ final class Product: Model {
     var name: String
 
     @Parent(key: "company_id")
-     var company: Company
+    var company: Company
     
-    // Creates a new, empty Galaxy.
     init() { }
 
-    init(id: UUID?, name: String, company_id: Company.IDValue) {
+    init(id: UUID? = nil, name: String, company_id: Company.IDValue) {
         self.id = id
         self.name = name
         self.$company.id = company_id

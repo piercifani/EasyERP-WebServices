@@ -1,6 +1,7 @@
 @testable import App
 import Vapor
 import XCTVapor
+import Fluent
 
 final class AppTests: XCTestCase {
 
@@ -24,15 +25,33 @@ final class AppTests: XCTestCase {
     
     func testCreateCompany() throws {
         
-        let company = Company(id: nil, name: "Hello")
+        /// Create and fetch a company
+        let company = Company(name: "Contoso")
         try company.save(on: app.db).wait()
-        let fetchedCompany = try Company.find(company.id, on: app.db).wait()
-        XCTAssertNotNil(fetchedCompany)
+        guard let fetchedCompany = try Company.find(company.id, on: app.db).wait() else {
+            throw "Unwrap Failed"
+        }
+        XCTAssertNotNil(fetchedCompany.id)
+    
+        /// Now add a product
+        let product1 = Product(name: "Product 1", company_id: company.id!)
+        try product1.save(on: app.db).wait()
+        XCTAssertNotNil(product1.id)
+        XCTAssertNotNil(product1.$company.id == fetchedCompany.id)
         
-        let Product1 = Product(id: nil, name: "product 1", company_id: company.id!)
-        try Product1.save(on: app.db).wait()
-        print(Product1.$company.name)
-        XCTAssertNotNil(Product1.$company)
-
+        guard let fetchedCompany2 = try Company
+            .query(on: app.db)
+            .filter(\.$id, .equal, fetchedCompany.id!)
+            .with(\.$products)
+            .first()
+            .wait() else {
+                throw "Unwrap Failed"
+        }
+        XCTAssert(fetchedCompany2.products[0].name == product1.name)
     }
+}
+
+
+extension String: Swift.Error {
+    
 }

@@ -7,7 +7,7 @@ struct CreateProduct: Migration {
         database.schema("products")
             .id()
             .field("name", .string)
-            .field("company_id", .string)
+            .field("company_id", .uuid, .references("company", "id"))
             .create()
     }
 
