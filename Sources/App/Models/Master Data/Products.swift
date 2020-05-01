@@ -3,7 +3,7 @@ import Fluent
 
 final class Product: Model {
     // Name of the table or collection.
-    static let schema = "products"
+    static let schema = "product"
     
     // Unique identifier for this product.
     @ID(key: .id)

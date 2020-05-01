@@ -4,10 +4,10 @@ import Fluent
 struct CreateProduct: Migration {
     // Prepares the database for storing Galaxy models.
     func prepare(on database: Database) -> EventLoopFuture<Void> {
-        database.schema("products")
+        database.schema("product")
             .id()
             .field("name", .string)
-            .field("company_id", .string)
+            .field("company_id", .uuid, .references("company", "id"))
             .create()
     }
 

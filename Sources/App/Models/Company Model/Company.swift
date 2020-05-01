@@ -32,6 +32,9 @@ final class Company: Model {
     @Siblings(through: AddressToCompany.self, from: \.$companyId, to: \.$addressId)
     var companyAddresID: [Address]
     
+    @Children(for: \.$company)
+    var products: [Product]
+
     // Creates a new, empty Company.
     init() { }
     
