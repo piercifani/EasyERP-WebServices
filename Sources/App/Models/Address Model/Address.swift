@@ -39,7 +39,7 @@ final class Address: Model {
     // Creates a new, empty Address.
     init() { }
     
-    init(id: UUID?, address1: String, address2: String, zipCode:String, city: String, zoneCode: String, countryCode: String) {
+    init(id: UUID?, address1: String, address2: String, zipCode: String, city: String, zoneCode: String, countryCode: String) {
         self.id = id
         self.address1 = address1
         self.address2 = address2

@@ -30,7 +30,7 @@ final class Company: Model {
     var mainLanguage: String
     
     @Siblings(through: AddressToCompany.self, from: \.$companyId, to: \.$addressId)
-    var companyAddresID: [Address]
+    var addresses: [Address]
     
     @Children(for: \.$company)
     var products: [Product]
