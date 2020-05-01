@@ -46,9 +46,9 @@ final class ContactInfo: Model {
     var modificationDate: Date
     
     
-    //PENDINETE DE CREAR LA RELACION
-    //@Siblings(through: addressToCompany.self, from: \.$addressId, to: \.$companyId)
-    //var companyId: [Company]
+    //relacion con customer
+     @Siblings(through: ContactInfoToCustomer.self, from: \.$contactInfoId, to: \.$customerId)
+       var customerId: [Customer]
     
     
     // Creates a new, empty Address.

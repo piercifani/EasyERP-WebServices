@@ -25,20 +25,30 @@ final class Customer: Model {
     @Field(key: "modificationDate")
     var modificationDate: Date
     
-    // PENDIENTE: crear la relacion con addresses
-    // PENDIENTE: crear la relacion con contacto
-    // PENDIENTE: crear la relacion con paymentmethod
-    //@Siblings(through: addressToCompany.self, from: \.$addressId, to: \.$companyId)
-    //var companyId: [Company]
+    //la relacion con addresses
+    @Siblings(through: AddressToCustomer.self, from: \.$customerId, to: \.$addressId)
+    var addresses: [Address]
     
+    
+    //la relacion con contacto
+    
+    @Siblings(through: ContactInfoToCustomer.self, from: \.$customerId, to: \.$contactInfoId)
+    var contacInfo: [ContactInfo]
+    
+    
+    // PENDIENTE: crear la relacion con paymentmethod
+   
+    @Parent(key: "company_id")
+    var company: Company
     
     // Creates a new, empty Address.
     init() { }
     
-    init(id: UUID?, name: String, vat: String) {
+    init(id: UUID?, name: String, vat: String , company_id: Company.IDValue) {
         self.id = id
         self.name = name
         self.vat = vat
+        self.$company.id = company_id
         self.creationDate = Date()
         self.modificationDate = Date()
     }

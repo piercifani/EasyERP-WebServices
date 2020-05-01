@@ -10,6 +10,7 @@ struct CreateCustomer: Migration {
             .field("vat", .string)
             .field("creationDate", .date)
             .field("modificationDate", .date)
+            .field("company_id", .uuid, .references("company", "id"))
             .create()
     }
     
