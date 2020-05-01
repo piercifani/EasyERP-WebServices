@@ -1,7 +1,7 @@
 import Foundation
 import Fluent
 
-final class addressToCompany: Model {
+final class AddressToCompany: Model {
     // Name of the table or collection.
     static let schema = "addressToCompany"
 
@@ -14,7 +14,6 @@ final class addressToCompany: Model {
     
     @Parent(key: "companyId")
     var companyId: Company
-    
     
     // Creates a new, empty addressToObject.
     init() { }

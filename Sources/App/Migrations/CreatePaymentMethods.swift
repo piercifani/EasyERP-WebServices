@@ -7,7 +7,7 @@ struct CreatePaymentMethods: Migration {
         database.schema("paymentMethods")
             .id()
             .field("description", .string)
-            .field("dueDate", .string)
+            .field("dueDate", .date)
             .field("rate", .string)
             .create()
     }

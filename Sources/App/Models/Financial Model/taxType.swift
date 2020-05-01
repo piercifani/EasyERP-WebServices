@@ -4,11 +4,11 @@ import Fluent
 final class taxType: Model {
     // Name of the table or collection.
     static let schema = "taxType"
-
+    
     // Unique identifier for this taxType.
     @ID(key: .id)
     var id: UUID?
-
+    
     // description
     @Field(key: "description")
     var description: String
@@ -34,7 +34,7 @@ final class taxType: Model {
     
     // Creates a new, empty taxType.
     init() { }
-
+    
     init(id: UUID?, description: String, country: String, region: String, rate:String) {
         self.id = id
         self.description = description

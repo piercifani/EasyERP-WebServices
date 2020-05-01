@@ -4,11 +4,11 @@ import Fluent
 final class Customer: Model {
     // Name of the table or collection.
     static let schema = "customer"
-
+    
     // Unique identifier for this customer.
     @ID(key: .id)
     var id: UUID?
-
+    
     //Customer Name
     @Field(key: "name")
     var name: String
@@ -19,11 +19,11 @@ final class Customer: Model {
     
     //creationDate
     @Field(key: "creationDate")
-    var creationDate: String
+    var creationDate: Date
     
     //modificationDate
     @Field(key: "modificationDate")
-    var modificationDate: String
+    var modificationDate: Date
     
     // PENDIENTE: crear la relacion con addresses
     // PENDIENTE: crear la relacion con contacto
@@ -34,13 +34,13 @@ final class Customer: Model {
     
     // Creates a new, empty Address.
     init() { }
-
+    
     init(id: UUID?, name: String, vat: String) {
         self.id = id
         self.name = name
         self.vat = vat
-        self.creationDate = "01/01/2020"
-        self.modificationDate = "01/01/2020"
+        self.creationDate = Date()
+        self.modificationDate = Date()
     }
 }
 

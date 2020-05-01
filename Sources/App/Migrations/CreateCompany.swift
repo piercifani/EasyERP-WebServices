@@ -9,7 +9,7 @@ struct CreateCompany: Migration {
             .field("name", .string)
             .field("companyVatNumber", .string)
             .field("companyAddressId", .string)
-            .field("creationDate", .string)
+            .field("creationDate", .date)
             .field("mainCurrency", .string)
             .field("mainLanguage", .string)
             .create()

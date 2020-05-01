@@ -13,8 +13,8 @@ struct CreateContactInfo: Migration {
             .field("phone1", .string)
             .field("phone2", .string)
             .field("website", .string)
-            .field("creationDate", .string)
-            .field("modificationDate", .string)
+            .field("creationDate", .date)
+            .field("modificationDate", .date)
             .create()
     }
     

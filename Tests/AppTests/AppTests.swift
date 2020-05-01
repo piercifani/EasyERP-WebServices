@@ -20,30 +20,9 @@ final class AppTests: XCTestCase {
         app = nil
     }
     
-    /// MARK: Tests
-    
-    func companyAddresses(req: Request) throws -> EventLoopFuture<[Address]> {
-        let companyID: Company.IDValue? = req.parameters.get("id")
-        return Company
-            .find(companyID, on: req.db)
-            .unwrap(or: Abort(.notFound))
-            .flatMap {
-                try! $0.$companyAddresID
-                        .query(on: req.db)
-                        .all()
-            }
-    }
-    
-    func addAddress(req: Request) throws -> EventLoopFuture<[Address]> {
-        guard let companyID: Company.IDValue = req.parameters.get("id") else { throw Abort(.notFound) }
-        guard let addressID: Address.IDValue = try? req.content.decode(Company.self).id else { throw Abort(.notFound) }
-        _ = addressToCompany(addressId: addressID, companyId: companyID).save(on: req.db)
-        return try self.companyAddresses(req: req)
-    }
-    
     func testCreateCompany() throws {
         
-        var company = Company(id: nil, name: "Hello", companyVatNumber: "123456A", mainCurrency: "EUR", mainLanguage: "SP")
+        let company = Company(id: nil, name: "Hello", companyVatNumber: "123456A", mainCurrency: "EUR", mainLanguage: "SP")
         try company.save(on: app.db).wait()
         let fetchedCompany = try Company.find(company.id, on: app.db).wait()
         XCTAssertNotNil(fetchedCompany)

@@ -8,8 +8,8 @@ struct CreateCustomer: Migration {
             .id()
             .field("name", .string)
             .field("vat", .string)
-            .field("creationDate", .string)
-            .field("modificationDate", .string)
+            .field("creationDate", .date)
+            .field("modificationDate", .date)
             .create()
     }
     
