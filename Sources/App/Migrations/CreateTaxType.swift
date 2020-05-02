@@ -11,6 +11,7 @@ struct CreateTaxType: Migration {
             .field("region", .string)
             .field("rate", .string)
             .field("company_id", .uuid, .references("company", "id"))
+            
             .create()
     }
     

@@ -7,6 +7,18 @@ struct CreateProduct: Migration {
         database.schema("product")
             .id()
             .field("name", .string)
+            .field("productType", .string)
+            .field("supplierReferenceId", .string)
+            .field("EAN", .string)
+            .field("LongDesc", .string)
+            .field("photoURL", .string)
+            .field("dimX", .string)
+            .field("dimY", .string)
+            .field("dimZ", .string)
+            .field("weight", .string)
+            .field("measureUnit", .string)
+            .field("creationDate", .date)
+            .field("modificationDate", .date)
             .field("company_id", .uuid, .references("company", "id"))
             .create()
     }
@@ -16,3 +28,4 @@ struct CreateProduct: Migration {
         database.schema("product").delete()
     }
 }
+

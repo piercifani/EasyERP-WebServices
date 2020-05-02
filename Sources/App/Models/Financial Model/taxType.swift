@@ -34,6 +34,9 @@ final class taxType: Model {
     @Parent(key: "company_id")
     var company: Company
     
+    @Siblings(through: TaxTypeToProducts.self, from: \.$taxTypeId, to: \.$productsId)
+    var productId: [Product]
+    
     
     // Creates a new, empty taxType.
     init() { }

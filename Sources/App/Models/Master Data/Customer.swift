@@ -42,7 +42,7 @@ final class Customer: Model {
     var company: Company
     
     @Children(for: \.$customer)
-    var paymentMethods: [paymentMethod]
+    var paymentTerms: [paymentTerms]
     
     // Creates a new, empty Address.
     init() { }

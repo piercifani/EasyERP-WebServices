@@ -1,10 +1,10 @@
 import Foundation
 import Fluent
 
-struct CreatePaymentMethod: Migration {
+struct CreatePaymentTerms: Migration {
     // Prepares the database for storing Galaxy models.
     func prepare(on database: Database) -> EventLoopFuture<Void> {
-        database.schema("paymentMethod")
+        database.schema("paymentTerms")
             .id()
             .field("description", .string)
             .field("dueDate", .string)
@@ -15,6 +15,6 @@ struct CreatePaymentMethod: Migration {
     
     // Optionally reverts the changes made in the prepare method.
     func revert(on database: Database) -> EventLoopFuture<Void> {
-        database.schema("paymentMethod").delete()
+        database.schema("paymentTerms").delete()
     }
 }

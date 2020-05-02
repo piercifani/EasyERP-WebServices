@@ -1,9 +1,9 @@
 import Foundation
 import Fluent
 
-final class paymentMethod: Model {
+final class paymentTerms: Model {
     // Name of the table or collection.
-    static let schema = "paymentMethod"
+    static let schema = "paymentTerms"
     
     // Unique identifier for this Address.
     @ID(key: .id)

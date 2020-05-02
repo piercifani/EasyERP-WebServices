@@ -29,8 +29,9 @@ final class AppTests: XCTestCase {
         try _addAddressesCompany(companyID: companyId)
         let customerId = try _createCustomer(companyID: companyId)
         try _addCustomerInfo(customerID: customerId)
-        try _paymentMethod (customerID: customerId)
+        try _paymentTerms (customerID: customerId)
         try _addTaxType(companyID: companyId)
+        try _addTaxTypeToProducts(companyID: companyId)
     }
     
     func _createCompany() throws -> UUID {
@@ -70,13 +71,14 @@ final class AppTests: XCTestCase {
     
     func _addProducts(companyID: UUID) throws {
         /// Now add a product
-        let product1 = Product(id: nil, name: "Coca-Cola", company_id: companyID)
+        
+        let product1 = Product(id: nil, name: "Coca-cola", productType: "FP", supplierReferenceId: "1231-998123", EAN: "87104018502135", LongDesc: "Lata de coca cola, roja, sabor cola", photoURL: "https://images-na.ssl-images-amazon.com/images/I/71CqlCwfFuL._AC_SL1500_.jpg" , dimX: "10" , dimY : "10", dimZ : "25" , weight: "0.3" ,measureUnit: "UN" , company_id: companyID)
         try product1.save(on: app.db).wait()
         XCTAssertNotNil(product1.id)
         XCTAssertNotNil(product1.$company.id == companyID)
                 
         /// Now add a product2
-        let product2 = Product(id: nil, name: "Fanta", company_id: companyID)
+        let product2 = Product(id: nil, name: "Fanta", productType: "FP", supplierReferenceId: "1231-99124523", EAN: "871045134502135", LongDesc: "Lata de fanta, naranja, sabor naranja", photoURL: "https://m.media-amazon.com/images/I/516pZFbo+AL._AC_SS350_.jpg" , dimX: "10" , dimY : "10", dimZ : "25" , weight: "0.3" ,measureUnit: "UN" , company_id: companyID)
         try product2.save(on: app.db).wait()
         XCTAssertNotNil(product2.id)
         XCTAssertNotNil(product2.$company.id == companyID)
@@ -91,7 +93,7 @@ final class AppTests: XCTestCase {
                 throw "Unwrap Failed"
         }
         XCTAssert(fetchedCompany.products.count == 2)
-        XCTAssertNotNil(fetchedCompany.products.first(where: { $0.name == "Coca-Cola" }))
+        XCTAssertNotNil(fetchedCompany.products.first(where: { $0.name == "Coca-cola" }))
         XCTAssertNotNil(fetchedCompany.products.first(where: { $0.name == "Fanta" }))
     }
     
@@ -141,32 +143,32 @@ final class AppTests: XCTestCase {
         
     }
     
-    func _paymentMethod(customerID: UUID) throws  {
+    func _paymentTerms(customerID: UUID) throws  {
         // New customer in companyID
         
-        let paymentMethod1 = paymentMethod(id: nil, description: "cash", dueDate: "0", rate: "100", customerID: customerID)
-        try paymentMethod1.save(on: app.db).wait()
+        let paymentTerms1 = paymentTerms(id: nil, description: "cash", dueDate: "0", rate: "100", customerID: customerID)
+        try paymentTerms1.save(on: app.db).wait()
         
-        let paymentMethod2 = paymentMethod(id: nil, description: "30 días el 20%", dueDate: "30", rate: "20", customerID: customerID)
-        try paymentMethod2.save(on: app.db).wait()
+        let paymentTerms2 = paymentTerms(id: nil, description: "30 días el 20%", dueDate: "30", rate: "20", customerID: customerID)
+        try paymentTerms2.save(on: app.db).wait()
         
-        let paymentMethod3 = paymentMethod(id: nil, description: "60 días el 80%", dueDate: "60", rate: "80", customerID: customerID)
-        try paymentMethod3.save(on: app.db).wait()
+        let paymentTerms3 = paymentTerms(id: nil, description: "60 días el 80%", dueDate: "60", rate: "80", customerID: customerID)
+        try paymentTerms3.save(on: app.db).wait()
             
         
         /// Verify that the paymentMethods are there
         guard let fetchedCustomer = try Customer
             .query(on: app.db)
             .filter(\.$id, .equal, customerID)
-            .with(\.$paymentMethods)
+            .with(\.$paymentTerms)
             .first()
             .wait() else {
                 throw "Unwrap Failed"
         }
         
-        XCTAssert(fetchedCustomer.paymentMethods.count == 3)
-        XCTAssertNotNil(fetchedCustomer.paymentMethods.first(where: { $0.description == "60 días el 80%" }))
-        XCTAssertNotNil(fetchedCustomer.paymentMethods.first(where: { $0.description == "cash" }))
+        XCTAssert(fetchedCustomer.paymentTerms.count == 3)
+        XCTAssertNotNil(fetchedCustomer.paymentTerms.first(where: { $0.description == "60 días el 80%" }))
+        XCTAssertNotNil(fetchedCustomer.paymentTerms.first(where: { $0.description == "cash" }))
         
     }
     
@@ -207,6 +209,54 @@ final class AppTests: XCTestCase {
         XCTAssertNotNil(fetchedCompany.taxType.first(where: { $0.description == "Impuesto General Canarias" }))
         
     }
+    
+    func _addTaxTypeToProducts(companyID: UUID) throws  {
+        
+        // todos los productos de la company
+        
+        guard let fetchedCompany = try Company
+            .query(on: app.db)
+            .filter(\.$id, .equal, companyID)
+            .with(\.$products)
+            .with(\.$taxType)
+            .first()
+            .wait() else {
+                throw "Unwrap Failed"
+        }
+        
+        //busco el Id de una product en particular del array
+        
+        let product1 = fetchedCompany.products.first (where: { $0.name == "Coca-cola" })
+        
+        // busco el id del taxtype que quiero
+        
+        var taxType1 = fetchedCompany.taxType.first (where: { $0.description == "Impuesto General" })
+        
+        //asigno el primer impuesto taxttype al producto
+        
+        var pivotTaxTypeToProducts = TaxTypeToProducts(taxTypeId: taxType1?.id, productsId: product1?.id)
+        try pivotTaxTypeToProducts.save(on: app.db).wait()
+    
+        taxType1 = fetchedCompany.taxType.first (where: { $0.description == "Impuesto General Canarias" })
+        pivotTaxTypeToProducts = TaxTypeToProducts(taxTypeId: taxType1?.id, productsId: product1?.id)
+        try pivotTaxTypeToProducts.save(on: app.db).wait()
+        
+        
+        guard let fetchedProduct = try Product
+            .query(on: app.db)
+            .filter(\.$name, .equal, "Coca-cola")
+            .with(\.$taxType)
+            .first()
+            .wait() else {
+                throw "Unwrap Failed"
+        }
+        
+        //comprueba que en el producto coca-cola se pueden usar los dos tipos de impuestos
+        
+        XCTAssertNotNil(fetchedProduct.taxType.first(where: { $0.description == "Impuesto General Canarias" }))
+        XCTAssertNotNil(fetchedProduct.taxType.first(where: { $0.description == "Impuesto General" }))
+    }
+    
 }
 
 
