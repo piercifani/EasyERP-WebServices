@@ -29,6 +29,8 @@ final class Company: Model {
     @Field(key: "mainLanguage")
     var mainLanguage: String
     
+     //---------- Master Data Model ------------//
+    
     @Siblings(through: AddressToCompany.self, from: \.$companyId, to: \.$addressId)
     var addresses: [Address]
     
@@ -38,8 +40,15 @@ final class Company: Model {
     @Children(for: \.$company)
     var customer: [Customer]
     
+    //---------- Financial Model ------------//
+    
     @Children(for: \.$company)
     var taxType: [taxType]
+    
+    //---------- Logistic Model ------------//
+    
+    @Children(for: \.$company)
+    var budgetHeader: [BudgetHeader]
 
     // Creates a new, empty Company.
     init() { }

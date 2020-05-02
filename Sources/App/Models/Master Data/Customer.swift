@@ -36,13 +36,21 @@ final class Customer: Model {
     var contactInfo: [ContactInfo]
     
     
-    // PENDIENTE: crear la relacion con paymentmethod
+    //  relacion con paymentTerms
    
     @Parent(key: "company_id")
     var company: Company
     
     @Children(for: \.$customer)
     var paymentTerms: [paymentTerms]
+    
+    
+    // ----------- Logistic Model --------------
+    
+    @Children(for: \.$customer)
+    var budgetHeader: [BudgetHeader]
+    
+    
     
     // Creates a new, empty Address.
     init() { }

@@ -68,6 +68,9 @@ final class BudgetHeader: Model {
         
         self.creationDate = Date()
         self.modificationDate = Date()
+        self.totalGrossAmount = "0.0"
+        self.totalNetAmount = "0.0"
+        self.totalQty = "0"
     }
 }
 

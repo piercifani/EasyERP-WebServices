@@ -32,6 +32,7 @@ final class AppTests: XCTestCase {
         try _paymentTerms (customerID: customerId)
         try _addTaxType(companyID: companyId)
         try _addTaxTypeToProducts(companyID: companyId)
+        let headerBudgetId = try _createBudgetHeader(companyID: companyId)
     }
     
     func _createCompany() throws -> UUID {
@@ -111,11 +112,18 @@ final class AppTests: XCTestCase {
     func _addCustomerInfo(customerID: UUID) throws {
         // add and address into the  New customer
         
-        let customerAddress1 = Address(id: nil, address1: "Ps. Maragall 177", address2: "3/3", zipCode: "08025", city: "Barcelona", zoneCode: "Barcelona", countryCode: "SP")
+        var customerAddress1 = Address(id: nil, address1: "Ps. Maragall 177", address2: "3/3", zipCode: "08025", city: "Barcelona", zoneCode: "Barcelona", countryCode: "SP")
         try customerAddress1.save(on: app.db).wait()
         
-        let pivotAddressToCustomer1 = AddressToCustomer(addressId: customerAddress1.id , customerId: customerID)
+        var pivotAddressToCustomer1 = AddressToCustomer(addressId: customerAddress1.id , customerId: customerID)
         try pivotAddressToCustomer1.save(on: app.db).wait()
+        
+        customerAddress1 = Address(id: nil, address1: "av.Diagonal 134", address2: "1/1", zipCode: "08003", city: "Barcelona", zoneCode: "Barcelona", countryCode: "SP")
+        try customerAddress1.save(on: app.db).wait()
+        
+         pivotAddressToCustomer1 = AddressToCustomer(addressId: customerAddress1.id , customerId: customerID)
+        try pivotAddressToCustomer1.save(on: app.db).wait()
+        
         
         // add and contactinfo into the  New customer
         
@@ -257,6 +265,80 @@ final class AppTests: XCTestCase {
         XCTAssertNotNil(fetchedProduct.taxType.first(where: { $0.description == "Impuesto General" }))
     }
     
+    func _createBudgetHeader(companyID: UUID) throws -> UUID {
+        
+        guard let fetchedCompany = try Company
+            .query(on: app.db)
+            .filter(\.$id, .equal, companyID)
+            .with(\.$customer)
+            .first()
+            .wait() else {
+                throw "Unwrap Failed"
+        }
+        
+        let customerBudget = fetchedCompany.customer.first (where: { $0.name == "Dini" })
+        
+        guard let fetchedCustomer = try Customer
+            .query(on: app.db)
+            .filter(\.$id, .equal, (customerBudget?.id)!)
+            .with(\.$addresses)
+            .with(\.$paymentTerms)
+            .with(\.$contactInfo)
+            .first()
+            .wait() else {
+                throw "Unwrap Failed"
+        }
+        
+        
+        // busca el id dentro de las direcciones del customer para tener delivery addresss
+        let deliveryAddressIdForBudget = fetchedCustomer.addresses.first (where: { $0.address1 == "Ps. Maragall 177" })
+        
+        // busca el id dentro de las direcciones del customer para tener billing addresss
+        let billingAddressIdForBudget = fetchedCustomer.addresses.first (where: { $0.address1 == "av.Diagonal 134" })
+        
+        // busca el id dentro de los payment terms del customer
+        let paymentTermIdForBudget = fetchedCustomer.paymentTerms.first (where: { $0.description == "cash" })
+        
+        // busca el id dentro los contact del customer
+        
+        let contactInfoIdForBudget = fetchedCustomer.contactInfo.first (where: { $0.name == "Rosalia"  })
+        
+        
+        //@PIER: ¿por que no funciona nil en el id:?? y tengo que forzar UUID
+        
+        
+        let budgetHeader = BudgetHeader(id: UUID(), expectedDate: Date(), company_id: companyID, customer_id: (customerBudget?.id)!, delivery_address_id: (deliveryAddressIdForBudget?.id)!, billing_address_id: (billingAddressIdForBudget?.id)!, contactInfo_id: (contactInfoIdForBudget?.id)!, paymentTerms_id: (paymentTermIdForBudget?.id)!)
+        try budgetHeader.save(on: app.db).wait()
+        
+        
+        //buscando en la tabla de Headers pedidos del cliente customerBudget.id
+        
+        guard let fetchedBudgetHeader = try BudgetHeader
+            .query(on: app.db)
+            .filter(\.$customer.$id, .equal, (customerBudget?.id)!)
+            .with(\.$deliveryAddress)
+            .with(\.$billingAddress)
+            .with(\.$contactInfo)
+            .with(\.$customer)
+            .first()
+            .wait() else {
+                throw "Unwrap Failed"
+        }
+        
+        XCTAssertNotNil(fetchedBudgetHeader.id)
+        XCTAssertNotNil(fetchedBudgetHeader.$deliveryAddress.value?.$city.value == "Barcelona")
+        XCTAssertNotNil(fetchedBudgetHeader.$deliveryAddress.value?.$address1.value == "Ps. Maragall 177")
+        XCTAssertNotNil(fetchedBudgetHeader.$billingAddress.value?.$address1.value == "av.Diagonal 134")
+        XCTAssertNotNil(fetchedBudgetHeader.$customer.value?.$name.value == "Dini")
+        XCTAssertNotNil(fetchedBudgetHeader.$customer.value?.$vat.value == "79871312Y")
+        XCTAssertNotNil(fetchedBudgetHeader.$contactInfo.value?.$phone1.value == "696969696")
+        XCTAssertNotNil(fetchedBudgetHeader.$paymentTerms.value?.$rate.value == "100")
+        
+        
+        return (fetchedBudgetHeader.id)!
+        
+    }
+        
 }
 
 

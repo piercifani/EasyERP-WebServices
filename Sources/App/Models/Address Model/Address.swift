@@ -39,6 +39,13 @@ final class Address: Model {
     @Siblings(through: AddressToCustomer.self, from: \.$addressId, to: \.$customerId)
     var customerId: [Customer]
     
+    
+    @Children(for: \.$deliveryAddress)
+    var budgetHeader_deliveryAddress: [BudgetHeader]
+    
+    @Children(for: \.$billingAddress)
+    var budgetHeader_billingAddress: [BudgetHeader]
+    
     // Creates a new, empty Address.
     init() { }
     

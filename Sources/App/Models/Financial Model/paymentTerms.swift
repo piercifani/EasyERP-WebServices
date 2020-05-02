@@ -22,11 +22,16 @@ final class paymentTerms: Model {
     var rate: String
     
     
-    //PENDINTE: crear la relacion con customer y vendors
+    //PENDINTE: relacion vendors
     
     @Parent(key: "customer_id")
     var customer: Customer
     
+    
+    // ------------- Logistic Model ----------------
+    
+    @Children(for: \.$paymentTerms)
+    var budgetHeader: [BudgetHeader]
     
     // Creates a new, empty PaymentMethod.
     init() { }

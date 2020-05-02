@@ -51,6 +51,10 @@ final class ContactInfo: Model {
        var customerId: [Customer]
     
     
+    @Children(for: \.$contactInfo)
+    var budgetHeader: [BudgetHeader]
+    
+    
     // Creates a new, empty Address.
     init() { }
     
