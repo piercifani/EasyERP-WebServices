@@ -15,7 +15,7 @@ final class paymentMethod: Model {
     
     // days to execute the event (0 days to XX days)
     @Field(key: "dueDate")
-    var dueDate: Date
+    var dueDate: String
     
     // percentage of the amount (>0% to 100%)
     @Field(key: "rate")
@@ -24,18 +24,19 @@ final class paymentMethod: Model {
     
     //PENDINTE: crear la relacion con customer y vendors
     
-    //@Siblings(through: addressToCompany.self, from: \.$addressId, to: \.$companyId)
-    //var companyId: [Company]
+    @Parent(key: "customer_id")
+    var customer: Customer
     
     
     // Creates a new, empty PaymentMethod.
     init() { }
     
-    init(id: UUID?, description: String, dueDate: Date, rate:String) {
+    init(id: UUID?, description: String, dueDate: String, rate:String , customerID: Customer.IDValue) {
         self.id = id
         self.description = description
         self.dueDate = dueDate
         self.rate = rate
+        self.$customer.id = customerID
     }
 }
 

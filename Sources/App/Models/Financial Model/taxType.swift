@@ -31,16 +31,20 @@ final class taxType: Model {
     //@Siblings(through: addressToCompany.self, from: \.$addressId, to: \.$companyId)
     //var companyId: [Company]
     
+    @Parent(key: "company_id")
+    var company: Company
+    
     
     // Creates a new, empty taxType.
     init() { }
     
-    init(id: UUID?, description: String, country: String, region: String, rate:String) {
+    init(id: UUID?, description: String, country: String, region: String, rate:String , company_id: Company.IDValue) {
         self.id = id
         self.description = description
         self.country = country
         self.region = region
         self.rate = rate
+        self.$company.id = company_id
     }
 }
 

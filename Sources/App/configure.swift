@@ -14,7 +14,7 @@ public func configure(_ app: Application) throws {
     app.migrations.add(CreateAddressToCompany())
     app.migrations.add(CreateContactInfo())
     app.migrations.add(CreateCustomer())
-    app.migrations.add(CreatePaymentMethods())
+    app.migrations.add(CreatePaymentMethod())
     app.migrations.add(CreateTaxType())
     app.migrations.add(CreateAddressToCustomer())
     app.migrations.add(CreateContactInfoToCustomer())

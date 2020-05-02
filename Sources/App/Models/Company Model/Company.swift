@@ -37,6 +37,9 @@ final class Company: Model {
     
     @Children(for: \.$company)
     var customer: [Customer]
+    
+    @Children(for: \.$company)
+    var taxType: [taxType]
 
     // Creates a new, empty Company.
     init() { }

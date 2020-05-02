@@ -33,13 +33,16 @@ final class Customer: Model {
     //la relacion con contacto
     
     @Siblings(through: ContactInfoToCustomer.self, from: \.$customerId, to: \.$contactInfoId)
-    var contacInfo: [ContactInfo]
+    var contactInfo: [ContactInfo]
     
     
     // PENDIENTE: crear la relacion con paymentmethod
    
     @Parent(key: "company_id")
     var company: Company
+    
+    @Children(for: \.$customer)
+    var paymentMethods: [paymentMethod]
     
     // Creates a new, empty Address.
     init() { }

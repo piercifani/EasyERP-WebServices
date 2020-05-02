@@ -62,6 +62,7 @@ final class ContactInfo: Model {
         self.email2 = email2
         self.phone1 = phone1
         self.phone2 = phone2
+        self.website = website
         self.creationDate = Date()
         self.modificationDate = Date()
     }
