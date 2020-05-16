@@ -20,6 +20,8 @@ public func configure(_ app: Application) throws {
     app.migrations.add(CreateContactInfoToCustomer())
     app.migrations.add(CreateTaxTypeToProducts())
     app.migrations.add(CreateBudgetHeader())
+    app.migrations.add(CreateBudgetPositions())
+    app.migrations.add(CreateProductsToBudgetPositions())
     
     // register routes
     try routes(app)

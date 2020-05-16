@@ -53,6 +53,11 @@ final class BudgetHeader: Model {
     @Parent(key: "paymentTerms_id")
     var paymentTerms: paymentTerms
     
+    // lines of the budget
+    
+    @Children(for: \.$headerBudget)
+    var budgetPositions: [BudgetPositions]
+    
     // Creates a new, empty Address.
     init() { }
     

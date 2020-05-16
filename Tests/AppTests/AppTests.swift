@@ -32,7 +32,17 @@ final class AppTests: XCTestCase {
         try _paymentTerms (customerID: customerId)
         try _addTaxType(companyID: companyId)
         try _addTaxTypeToProducts(companyID: companyId)
-        let headerBudgetId = try _createBudgetHeader(companyID: companyId)
+        
+        // crear un budget con dos productos
+        
+        let budgetHeaderId = try _createBudgetHeader(companyID: companyId)
+        var selectProduct = try _pickUpProductToAddIntoBudgetId(description: "Coca-cola")
+        try _addPositionToBudgetHeader(budgetHeaderId: budgetHeaderId, product: selectProduct)
+        selectProduct = try _pickUpProductToAddIntoBudgetId(description: "Fanta")
+        try _addPositionToBudgetHeader(budgetHeaderId: budgetHeaderId, product: selectProduct)
+        try _checkBudget (budgetHeaderId : budgetHeaderId)
+        
+        
     }
     
     func _createCompany() throws -> UUID {
@@ -316,10 +326,6 @@ final class AppTests: XCTestCase {
         guard let fetchedBudgetHeader = try BudgetHeader
             .query(on: app.db)
             .filter(\.$customer.$id, .equal, (customerBudget?.id)!)
-            .with(\.$deliveryAddress)
-            .with(\.$billingAddress)
-            .with(\.$contactInfo)
-            .with(\.$customer)
             .first()
             .wait() else {
                 throw "Unwrap Failed"
@@ -338,6 +344,63 @@ final class AppTests: XCTestCase {
         return (fetchedBudgetHeader.id)!
         
     }
+    
+    func _pickUpProductToAddIntoBudgetId (description: String) throws -> Product  {
+        // New customer in companyID
+        
+        guard let fetchedProduct = try Product
+            .query(on: app.db)
+            .filter(\.$name, .equal, description)
+            .first()
+            .wait() else {
+                throw "Unwrap Failed"
+        }
+        
+        XCTAssertNotNil(fetchedProduct.id)
+        
+        return fetchedProduct
+    }
+    
+    
+    
+    
+    func _addPositionToBudgetHeader(budgetHeaderId: UUID , product: Product) throws  {
+        
+        // dependiendo del pais y region del delivey address se buscaria el impuesto correspondiente
+        
+        _ = product.$taxType.value?.first(where: {_ in 0.description == "Impuesto General"} )
+        
+        // usaria el taxType?.$rate multiplicarlo por el precio net unitario y calcular
+        
+        let newProductIntoTheBudget = BudgetPositions(id: nil, headerBudget_id: budgetHeaderId, quantityRequested: "4", quantitySold: "0", quantityStockout : "0", netPricePerUnit: "10.00", vatPerUnit: "123", totalVatPerProduct: "132", totalGrossPricePerProduct: "123", costPerUnit: "123", totalCostPerProduct: "123" )
+        try newProductIntoTheBudget.save(on: app.db).wait()
+        
+        let pivotProductsToBudgetPosition = ProductsToBudgetPositions(productsId: product.id, budgetPositionsId: newProductIntoTheBudget.id)
+        try pivotProductsToBudgetPosition.save(on: app.db).wait()
+        
+    }
+    
+    func _checkBudget (budgetHeaderId: UUID ) throws  {
+           
+           //check that the budget is correctly store in the db
+        
+           guard let fetchedBudget = try BudgetHeader
+               .query(on: app.db)
+               .filter(\.$id, .equal, budgetHeaderId)
+               .with(\.$budgetPositions)
+               .first()
+               .wait() else {
+                   throw "Unwrap Failed"
+           }
+           
+           XCTAssertNotNil(fetchedBudget.id)
+        
+        
+        XCTAssertNotNil(fetchedBudget.$customer.name == "Dini")
+        XCTAssertNotNil(fetchedBudget.$deliveryAddress.value?.$address1.value == "Ps. Maragall 177")
+        XCTAssertNotNil(fetchedBudget.budgetPositions.count == 2)
+           
+       }
         
 }
 
