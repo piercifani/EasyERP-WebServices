@@ -13,6 +13,7 @@ struct CreateBudgetHeader: Migration {
             .field("totalGrossAmount", .string)
             .field("totalNetAmount", .string)
             .field("totalQty", .string)
+            .field("globalStatus", .string)
             .field("company_id", .uuid, .references("company", "id"))
             .field("customer_id", .uuid, .references("customer", "id"))
             .field("delivery_address_id", .uuid, .references("address", "id"))

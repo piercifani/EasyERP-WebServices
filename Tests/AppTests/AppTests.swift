@@ -23,6 +23,23 @@ final class AppTests: XCTestCase {
     
     /// MARK: Tests
     
+    struct salesOrderPosition {
+        var _budgetHeaderId: UUID
+        var _productName: String
+        var _EAN: String
+        var _photoURL: String
+        var _dimX: String
+        var _dimY: String
+        var _dimZ: String
+        var _weight: String
+        var _measureUnit: String
+        var _quantitySold: String
+        var _quantityStockout: String
+        var _netPricePerUnit: String
+        var _vatPerUnit: String
+        var _costPerUnit: String
+    }
+    
     func testCreateCompany() throws {
         let companyId = try _createCompany()
         try _addProducts(companyID: companyId)
@@ -33,14 +50,45 @@ final class AppTests: XCTestCase {
         try _addTaxType(companyID: companyId)
         try _addTaxTypeToProducts(companyID: companyId)
         
-        // crear un budget con dos productos
+        // CREATE BUDGETS
         
-        let budgetHeaderId = try _createBudgetHeader(companyID: companyId)
+        // crear budget1 con dos productos
+        
+        let budgetHeaderId1 = try _createBudgetHeader(companyID: companyId)
         var selectProduct = try _pickUpProductToAddIntoBudgetId(description: "Coca-cola")
-        try _addPositionToBudgetHeader(budgetHeaderId: budgetHeaderId, product: selectProduct)
+        try _addPositionToBudgetHeader(budgetHeaderId: budgetHeaderId1, product: selectProduct)
         selectProduct = try _pickUpProductToAddIntoBudgetId(description: "Fanta")
-        try _addPositionToBudgetHeader(budgetHeaderId: budgetHeaderId, product: selectProduct)
-        try _checkBudget (budgetHeaderId : budgetHeaderId)
+        try _addPositionToBudgetHeader(budgetHeaderId: budgetHeaderId1, product: selectProduct)
+        try _checkBudget (budgetHeaderId : budgetHeaderId1)
+        
+        // crear budget2 con dos productos
+        
+        let budgetHeaderId2 = try _createBudgetHeader(companyID: companyId)
+        selectProduct = try _pickUpProductToAddIntoBudgetId(description: "Coca-cola")
+        try _addPositionToBudgetHeader(budgetHeaderId: budgetHeaderId2, product: selectProduct)
+        selectProduct = try _pickUpProductToAddIntoBudgetId(description: "Fanta")
+        try _addPositionToBudgetHeader(budgetHeaderId: budgetHeaderId2, product: selectProduct)
+        try _checkBudget (budgetHeaderId : budgetHeaderId2)
+        
+        
+        // Create SALES ORDERS
+        
+        // PENDIENTE: return NEW budgets (budgets that havent been use in any sales order)
+        //let availableBudgets = try _getBudgetsInStatus(customerID: customerId, Status: "NEW")
+        // ahora lo tengo forzado con el array
+        
+        let availableBudgets = [budgetHeaderId1,budgetHeaderId2]
+        
+        // filtar la information de los budgets, proponer entre las direcciones, pero la cabecera de la sales order debe ser unica
+        
+        //let [availableSalesOrderPositions] =
+        
+        try _getAllAvailablePositionsForSalesOrderCreation (budgetHeaderIds: availableBudgets)
+        
+        // crear sales order (posicion 1 - cocacola budget1 / posicion 2 - fanta del budget 2)
+        
+        let salesOrderHeaderId = try _createSalesOrderHeader(companyID: companyId , customerID:  customerId)
+        
         
         
     }
@@ -372,11 +420,8 @@ final class AppTests: XCTestCase {
         
         // usaria el taxType?.$rate multiplicarlo por el precio net unitario y calcular
         
-        let newProductIntoTheBudget = BudgetPositions(id: nil, headerBudget_id: budgetHeaderId, quantityRequested: "4", quantitySold: "0", quantityStockout : "0", netPricePerUnit: "10.00", vatPerUnit: "123", totalVatPerProduct: "132", totalGrossPricePerProduct: "123", costPerUnit: "123", totalCostPerProduct: "123" )
+        let newProductIntoTheBudget = BudgetPositions(id: nil, headerBudget_id: budgetHeaderId, product_id: product.id! , quantityRequested: 4, quantitySold: "0", quantityStockout : "0", netPricePerUnit: "10.00", vatPerUnit: "123", totalVatPerProduct: "132", totalGrossPricePerProduct: "123", costPerUnit: "123", totalCostPerProduct: "123" )
         try newProductIntoTheBudget.save(on: app.db).wait()
-        
-        let pivotProductsToBudgetPosition = ProductsToBudgetPositions(productsId: product.id, budgetPositionsId: newProductIntoTheBudget.id)
-        try pivotProductsToBudgetPosition.save(on: app.db).wait()
         
     }
     
@@ -402,7 +447,101 @@ final class AppTests: XCTestCase {
            
        }
         
+    func _createSalesOrderHeader(companyID: UUID , customerID : UUID) throws -> UUID {
+        
+        //PENDINTE DE PASAR LA INFO FILTRADA DEL GET THE BUDGETS
+        
+        let salesOrderHeader = SalesOrderHeader(id: nil, company_id: companyID, customerId: customerID, customerName: "testName", customerVatNumber: "test12323412", contactInfoName: "testAlan", contactInfoLastName: "testOsers", contactInfoPhone1: "73786123123", contactInfoPhone2: "00000000", contactInfoEmail1: "aa@aa.com", contactInfoEmail2: "N/A", deliveryAddress1: "ps. 123 8381", deliveryAddress2: "p1 p2", deliveryZipCode: "08013", deliveryCity: "Barcelona", deliveryZoneCode: "Barcelona", deliveryCountryCode: "SP", billingAddress1: "uduudud", billingAddress2: "12314", billingZipCode: "08103", billingCity: "Barcelona", billingZoneCode: "Barcelona", billingCountryCode: "SP")
+    
+        try salesOrderHeader.save(on: app.db).wait()
+        
+        return (salesOrderHeader.id!)
+    }
+    
+    
+    func _getAllAvailablePositionsForSalesOrderCreation(budgetHeaderIds : [UUID] ) throws {
+            
+        var availableBudgetHeaders = [BudgetHeader]()
+        
+            for i in budgetHeaderIds {
+                guard let fetchedBudgetHeaders = try BudgetHeader
+                        .query(on: app.db)
+                        .filter(\.$id, .equal, i)
+                        .with(\.$budgetPositions)
+                        .first()
+                        .wait() else {
+                            throw "Unwrap Failed"
+                    }
+                availableBudgetHeaders.append(fetchedBudgetHeaders)
+            }
+        
+        XCTAssertNotNil(availableBudgetHeaders.count == 2)
+        
+        var availableSalesOrdersPositions = [salesOrderPosition]()
+        
+        for j in 0...availableBudgetHeaders.count-1 {
+            for x in 0...availableBudgetHeaders[j].budgetPositions.count-1 {
+                guard let fetchedProductData = try Product
+                .query(on: app.db)
+                .filter(\.$id, .equal, availableBudgetHeaders[j].budgetPositions[x].$product.id)
+                .first()
+                .wait() else {
+                    throw "Unwrap Failed"
+                }
+                
+                
+                
+                for _ in 1...(availableBudgetHeaders[j].budgetPositions[x].$quantityRequested.value)! {
+                      availableSalesOrdersPositions.append(salesOrderPosition.init(
+                        _budgetHeaderId: availableBudgetHeaders[j].id!,
+                        _productName: fetchedProductData.name,
+                        _EAN: fetchedProductData.EAN,
+                        _photoURL: fetchedProductData.photoURL,
+                        _dimX: fetchedProductData.dimX,
+                        _dimY: fetchedProductData.dimY,
+                        _dimZ: fetchedProductData.dimZ,
+                        _weight: fetchedProductData.weight,
+                        _measureUnit: fetchedProductData.measureUnit,
+                        _quantitySold: availableBudgetHeaders[j].budgetPositions[x].$quantitySold.value!,
+                        _quantityStockout: availableBudgetHeaders[j].budgetPositions[x].$quantityStockout.value!,
+                        _netPricePerUnit: availableBudgetHeaders[j].budgetPositions[x].$netPricePerUnit.value!,
+                        _vatPerUnit: availableBudgetHeaders[j].budgetPositions[x].$vatPerUnit.value!,
+                        _costPerUnit: availableBudgetHeaders[j].budgetPositions[x].$costPerUnit.value!))
+                 }
+            }
+        }
+        
+        for x in 0...3{
+            print(x)
+            print(availableSalesOrdersPositions[x]._productName)
+        }
+       
+
+    }
+        
+        
+        
+        
+    
+    
+    /*func _getBudgetsInStatus(customerID : UUID , Status : String) throws -> BudgetHeader {
+        
+        guard let fetchedBudgetHeaders = BudgetHeader
+            .query(on: app.db)
+            .filter(\.$customer.$id, .equal, customerID)
+            .filter(\.$globalStatus, .equal, Status)
+             else {
+                throw "Unwrap Failed"
+        }
+        
+        XCTAssertNotNil(fetchedBudgetHeader)
+
+        return fetchedBudgetHeader
+    }*/
+    
 }
+
+
 
 
 extension String: Swift.Error {

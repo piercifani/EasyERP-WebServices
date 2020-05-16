@@ -64,11 +64,11 @@ final class Product: Model {
     @Parent(key: "company_id")
     var company: Company
     
+    @Children(for: \.$product)
+    var budgetPositions: [BudgetPositions]
+    
     @Siblings(through: TaxTypeToProducts.self, from: \.$productsId, to: \.$taxTypeId)
     var taxType: [taxType]
-    
-    @Siblings(through: ProductsToBudgetPositions.self, from: \.$productId, to: \.$budgetPositionsId)
-    var BudgetPositions: [BudgetPositions]
     
     // Creates a new, empty Galaxy.
     init() { }

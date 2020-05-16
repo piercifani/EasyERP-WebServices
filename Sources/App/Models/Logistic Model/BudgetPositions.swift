@@ -13,7 +13,7 @@ final class BudgetPositions: Model {
     var headerBudget: BudgetHeader
     
     @Field(key: "quantityRequested")
-    var quantityRequested: String
+    var quantityRequested: Int
     
     @Field(key: "quantitySold")
     var quantitySold: String
@@ -41,8 +41,10 @@ final class BudgetPositions: Model {
     
     // product name.
     
-    @Siblings(through: ProductsToBudgetPositions.self, from: \.$budgetPositionsId, to: \.$productId)
-    var productId: [Product]
+    
+    @Parent(key: "product_id")
+    var product: Product
+
     
     // creation Date
     @Field(key: "creationDate")
@@ -58,9 +60,10 @@ final class BudgetPositions: Model {
     // Creates a new, empty Galaxy.
     init() { }
     
-    init(id: UUID?, headerBudget_id: BudgetHeader.IDValue, quantityRequested: String, quantitySold: String, quantityStockout:String, netPricePerUnit: String, vatPerUnit: String, totalVatPerProduct: String, totalGrossPricePerProduct: String , costPerUnit: String, totalCostPerProduct: String) {
+    init(id: UUID?, headerBudget_id: BudgetHeader.IDValue, product_id : Product.IDValue, quantityRequested: Int, quantitySold: String, quantityStockout:String, netPricePerUnit: String, vatPerUnit: String, totalVatPerProduct: String, totalGrossPricePerProduct: String , costPerUnit: String, totalCostPerProduct: String) {
         self.id = id
         self.$headerBudget.id = headerBudget_id
+        self.$product.id = product_id
         self.quantityRequested = quantityRequested
         self.quantityStockout = quantityStockout
         self.quantitySold = quantitySold

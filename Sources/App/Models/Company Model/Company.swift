@@ -49,6 +49,12 @@ final class Company: Model {
     
     @Children(for: \.$company)
     var budgetHeader: [BudgetHeader]
+    
+    
+    @Children(for: \.$company)
+    var salesOrderHeader: [SalesOrderHeader]
+    
+    
 
     // Creates a new, empty Company.
     init() { }

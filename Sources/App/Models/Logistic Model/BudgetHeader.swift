@@ -33,6 +33,10 @@ final class BudgetHeader: Model {
     @Field(key: "totalQty")
     var totalQty: String
    
+    //globalStatus
+    @Field(key: "globalStatus")
+    var globalStatus: String
+    
     //----------
     
     @Parent(key: "company_id")
@@ -76,6 +80,7 @@ final class BudgetHeader: Model {
         self.totalGrossAmount = "0.0"
         self.totalNetAmount = "0.0"
         self.totalQty = "0"
+        self.globalStatus = "NEW"
     }
 }
 

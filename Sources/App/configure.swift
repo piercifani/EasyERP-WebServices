@@ -21,7 +21,8 @@ public func configure(_ app: Application) throws {
     app.migrations.add(CreateTaxTypeToProducts())
     app.migrations.add(CreateBudgetHeader())
     app.migrations.add(CreateBudgetPositions())
-    app.migrations.add(CreateProductsToBudgetPositions())
+    app.migrations.add(CreateSalesOrderHeader())
+    app.migrations.add(CreateSalesOrderPositions())
     
     // register routes
     try routes(app)

@@ -7,7 +7,7 @@ struct CreateBudgetPositions: Migration {
         database.schema("budgetPositions")
             .id()
             
-            .field("quantityRequested", .string)
+            .field("quantityRequested", .int)
             .field("quantitySold", .string)
             .field("quantityStockout", .string)
             .field("netPricePerUnit", .string)
@@ -19,6 +19,7 @@ struct CreateBudgetPositions: Migration {
             .field("modificationDate", .date)
             .field("creationDate", .date)
             .field("headerBudget_id", .uuid, .references("budgetHeader", "id"))
+            .field("product_id", .uuid, .references("product", "id"))
             .create()
     }
     
