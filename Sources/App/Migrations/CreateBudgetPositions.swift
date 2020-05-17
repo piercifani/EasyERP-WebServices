@@ -6,7 +6,7 @@ struct CreateBudgetPositions: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {
         database.schema("budgetPositions")
             .id()
-            
+            .field("internalID", .int)
             .field("quantityRequested", .int)
             .field("quantitySold", .string)
             .field("quantityStockout", .string)

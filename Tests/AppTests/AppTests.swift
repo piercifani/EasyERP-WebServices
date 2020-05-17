@@ -56,18 +56,18 @@ final class AppTests: XCTestCase {
         
         let budgetHeaderId1 = try _createBudgetHeader(companyID: companyId)
         var selectProduct = try _pickUpProductToAddIntoBudgetId(description: "Coca-cola")
-        try _addPositionToBudgetHeader(budgetHeaderId: budgetHeaderId1, product: selectProduct)
+        try _addPositionToBudgetHeader(budgetHeaderId: budgetHeaderId1, product: selectProduct , internalID : 0)
         selectProduct = try _pickUpProductToAddIntoBudgetId(description: "Fanta")
-        try _addPositionToBudgetHeader(budgetHeaderId: budgetHeaderId1, product: selectProduct)
+        try _addPositionToBudgetHeader(budgetHeaderId: budgetHeaderId1, product: selectProduct, internalID : 1)
         try _checkBudget (budgetHeaderId : budgetHeaderId1)
         
         // crear budget2 con dos productos
         
         let budgetHeaderId2 = try _createBudgetHeader(companyID: companyId)
         selectProduct = try _pickUpProductToAddIntoBudgetId(description: "Coca-cola")
-        try _addPositionToBudgetHeader(budgetHeaderId: budgetHeaderId2, product: selectProduct)
+        try _addPositionToBudgetHeader(budgetHeaderId: budgetHeaderId2, product: selectProduct , internalID : 0)
         selectProduct = try _pickUpProductToAddIntoBudgetId(description: "Fanta")
-        try _addPositionToBudgetHeader(budgetHeaderId: budgetHeaderId2, product: selectProduct)
+        try _addPositionToBudgetHeader(budgetHeaderId: budgetHeaderId2, product: selectProduct , internalID : 1)
         try _checkBudget (budgetHeaderId : budgetHeaderId2)
         
         
@@ -137,7 +137,7 @@ final class AppTests: XCTestCase {
         XCTAssertNotNil(product1.$company.id == companyID)
                 
         /// Now add a product2
-        let product2 = Product(id: nil, name: "Fanta", productType: "FP", supplierReferenceId: "1231-99124523", EAN: "871045134502135", LongDesc: "Lata de fanta, naranja, sabor naranja", photoURL: "https://m.media-amazon.com/images/I/516pZFbo+AL._AC_SS350_.jpg" , dimX: "10" , dimY : "10", dimZ : "25" , weight: "0.3" ,measureUnit: "UN" , company_id: companyID)
+        let product2 = Product(id: nil , name: "Fanta", productType: "FP", supplierReferenceId: "1231-99124523", EAN: "871045134502135", LongDesc: "Lata de fanta, naranja, sabor naranja", photoURL: "https://m.media-amazon.com/images/I/516pZFbo+AL._AC_SS350_.jpg" , dimX: "10" , dimY : "10", dimZ : "25" , weight: "0.3" ,measureUnit: "UN" , company_id: companyID)
         try product2.save(on: app.db).wait()
         XCTAssertNotNil(product2.id)
         XCTAssertNotNil(product2.$company.id == companyID)
@@ -412,7 +412,7 @@ final class AppTests: XCTestCase {
     
     
     
-    func _addPositionToBudgetHeader(budgetHeaderId: UUID , product: Product) throws  {
+    func _addPositionToBudgetHeader(budgetHeaderId: UUID , product: Product , internalID : Int) throws  {
         
         // dependiendo del pais y region del delivey address se buscaria el impuesto correspondiente
         
@@ -420,7 +420,7 @@ final class AppTests: XCTestCase {
         
         // usaria el taxType?.$rate multiplicarlo por el precio net unitario y calcular
         
-        let newProductIntoTheBudget = BudgetPositions(id: nil, headerBudget_id: budgetHeaderId, product_id: product.id! , quantityRequested: 4, quantitySold: "0", quantityStockout : "0", netPricePerUnit: "10.00", vatPerUnit: "123", totalVatPerProduct: "132", totalGrossPricePerProduct: "123", costPerUnit: "123", totalCostPerProduct: "123" )
+        let newProductIntoTheBudget = BudgetPositions(id: nil, internalID: internalID, headerBudget_id: budgetHeaderId, product_id: product.id! , quantityRequested: 4, quantitySold: "0", quantityStockout : "0", netPricePerUnit: "10.00", vatPerUnit: "123", totalVatPerProduct: "132", totalGrossPricePerProduct: "123", costPerUnit: "123", totalCostPerProduct: "123" )
         try newProductIntoTheBudget.save(on: app.db).wait()
         
     }
@@ -461,62 +461,39 @@ final class AppTests: XCTestCase {
     
     func _getAllAvailablePositionsForSalesOrderCreation(budgetHeaderIds : [UUID] ) throws {
             
-        var availableBudgetHeaders = [BudgetHeader]()
-        
-            for i in budgetHeaderIds {
-                guard let fetchedBudgetHeaders = try BudgetHeader
-                        .query(on: app.db)
-                        .filter(\.$id, .equal, i)
-                        .with(\.$budgetPositions)
-                        .first()
-                        .wait() else {
-                            throw "Unwrap Failed"
-                    }
-                availableBudgetHeaders.append(fetchedBudgetHeaders)
-            }
-        
-        XCTAssertNotNil(availableBudgetHeaders.count == 2)
-        
         var availableSalesOrdersPositions = [salesOrderPosition]()
         
-        for j in 0...availableBudgetHeaders.count-1 {
-            for x in 0...availableBudgetHeaders[j].budgetPositions.count-1 {
-                guard let fetchedProductData = try Product
+        
+        for i in 0...budgetHeaderIds.count-1{
+            
+            let fetchedBudgetPositions = BudgetPositions
                 .query(on: app.db)
-                .filter(\.$id, .equal, availableBudgetHeaders[j].budgetPositions[x].$product.id)
-                .first()
-                .wait() else {
-                    throw "Unwrap Failed"
-                }
-                
-                
-                
-                for _ in 1...(availableBudgetHeaders[j].budgetPositions[x].$quantityRequested.value)! {
-                      availableSalesOrdersPositions.append(salesOrderPosition.init(
-                        _budgetHeaderId: availableBudgetHeaders[j].id!,
-                        _productName: fetchedProductData.name,
-                        _EAN: fetchedProductData.EAN,
-                        _photoURL: fetchedProductData.photoURL,
-                        _dimX: fetchedProductData.dimX,
-                        _dimY: fetchedProductData.dimY,
-                        _dimZ: fetchedProductData.dimZ,
-                        _weight: fetchedProductData.weight,
-                        _measureUnit: fetchedProductData.measureUnit,
-                        _quantitySold: availableBudgetHeaders[j].budgetPositions[x].$quantitySold.value!,
-                        _quantityStockout: availableBudgetHeaders[j].budgetPositions[x].$quantityStockout.value!,
-                        _netPricePerUnit: availableBudgetHeaders[j].budgetPositions[x].$netPricePerUnit.value!,
-                        _vatPerUnit: availableBudgetHeaders[j].budgetPositions[x].$vatPerUnit.value!,
-                        _costPerUnit: availableBudgetHeaders[j].budgetPositions[x].$costPerUnit.value!))
-                 }
-            }
+                .filter(\.$headerBudget.$id, .equal, budgetHeaderIds[i])
+                .with(\.$product)
+            
+            
+            
+            
+            //fetchedBudgetPositions.quantitySold.first (where: { $0.internalID == 0  })
+            /*
+            availableSalesOrdersPositions.append(salesOrderPosition.init(
+            _budgetHeaderId: budgetHeaderIds[i],
+            _productName: fetchedBudgetPositions.$product.name,
+            _EAN: fetchedBudgetPositions.product.EAN,
+            _photoURL: fetchedBudgetPositions.product.photoURL,
+            _dimX: fetchedBudgetPositions.product.dimX,
+            _dimY: fetchedBudgetPositions.product.dimY,
+            _dimZ: fetchedBudgetPositions.product.dimZ,
+            _weight: fetchedBudgetPositions.product.weight,
+            _measureUnit: fetchedBudgetPositions.product.measureUnit,
+            _quantitySold: fetchedBudgetPositions.quantitySold,
+            _quantityStockout: fetchedBudgetPositions.quantityStockout,
+            _netPricePerUnit: fetchedBudgetPositions.netPricePerUnit,
+            _vatPerUnit: fetchedBudgetPositions.vatPerUnit,
+            _costPerUnit: fetchedBudgetPositions.costPerUnit))
+            */
         }
         
-        for x in 0...3{
-            print(x)
-            print(availableSalesOrdersPositions[x]._productName)
-        }
-       
-
     }
         
         

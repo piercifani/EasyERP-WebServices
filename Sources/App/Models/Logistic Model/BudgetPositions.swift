@@ -9,6 +9,9 @@ final class BudgetPositions: Model {
     @ID(key: .id)
     var id: UUID?
     
+    @Field(key: "internalID")
+    var internalID: Int
+    
     @Parent(key: "headerBudget_id")
     var headerBudget: BudgetHeader
     
@@ -60,8 +63,9 @@ final class BudgetPositions: Model {
     // Creates a new, empty Galaxy.
     init() { }
     
-    init(id: UUID?, headerBudget_id: BudgetHeader.IDValue, product_id : Product.IDValue, quantityRequested: Int, quantitySold: String, quantityStockout:String, netPricePerUnit: String, vatPerUnit: String, totalVatPerProduct: String, totalGrossPricePerProduct: String , costPerUnit: String, totalCostPerProduct: String) {
+    init(id: UUID?, internalID : Int, headerBudget_id: BudgetHeader.IDValue, product_id : Product.IDValue, quantityRequested: Int, quantitySold: String, quantityStockout:String, netPricePerUnit: String, vatPerUnit: String, totalVatPerProduct: String, totalGrossPricePerProduct: String , costPerUnit: String, totalCostPerProduct: String) {
         self.id = id
+        self.internalID = internalID
         self.$headerBudget.id = headerBudget_id
         self.$product.id = product_id
         self.quantityRequested = quantityRequested
