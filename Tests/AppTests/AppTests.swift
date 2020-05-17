@@ -59,6 +59,8 @@ final class AppTests: XCTestCase {
         try _addPositionToBudgetHeader(budgetHeaderId: budgetHeaderId1, product: selectProduct , internalID : 0)
         selectProduct = try _pickUpProductToAddIntoBudgetId(description: "Fanta")
         try _addPositionToBudgetHeader(budgetHeaderId: budgetHeaderId1, product: selectProduct, internalID : 1)
+        selectProduct = try _pickUpProductToAddIntoBudgetId(description: "Fanta")
+        try _addPositionToBudgetHeader(budgetHeaderId: budgetHeaderId1, product: selectProduct, internalID : 2)
         try _checkBudget (budgetHeaderId : budgetHeaderId1)
         
         // crear budget2 con dos productos
@@ -81,15 +83,9 @@ final class AppTests: XCTestCase {
         
         // filtar la information de los budgets, proponer entre las direcciones, pero la cabecera de la sales order debe ser unica
         
-        //let [availableSalesOrderPositions] =
-        
-        try _getAllAvailablePositionsForSalesOrderCreation (budgetHeaderIds: availableBudgets)
-        
-        // crear sales order (posicion 1 - cocacola budget1 / posicion 2 - fanta del budget 2)
-        
+        let availableSalesOrderPositions = try _getAllAvailablePositionsForSalesOrderCreation (budgetHeaderIds: availableBudgets)
         let salesOrderHeaderId = try _createSalesOrderHeader(companyID: companyId , customerID:  customerId)
-        
-        
+        try _createSalesOrderPositions( salesOrderHeaderId : salesOrderHeaderId , availableSalesOrdersPositions : availableSalesOrderPositions)
         
     }
     
@@ -360,26 +356,23 @@ final class AppTests: XCTestCase {
         // busca el id dentro los contact del customer
         
         let contactInfoIdForBudget = fetchedCustomer.contactInfo.first (where: { $0.name == "Rosalia"  })
-        
-        
-        //@PIER: ¿por que no funciona nil en el id:?? y tengo que forzar UUID
-        
+    
         
         let budgetHeader = BudgetHeader(id: UUID(), expectedDate: Date(), company_id: companyID, customer_id: (customerBudget?.id)!, delivery_address_id: (deliveryAddressIdForBudget?.id)!, billing_address_id: (billingAddressIdForBudget?.id)!, contactInfo_id: (contactInfoIdForBudget?.id)!, paymentTerms_id: (paymentTermIdForBudget?.id)!)
         try budgetHeader.save(on: app.db).wait()
         
         
-        //buscando en la tabla de Headers pedidos del cliente customerBudget.id
+        //comprobar que existe
         
         guard let fetchedBudgetHeader = try BudgetHeader
             .query(on: app.db)
-            .filter(\.$customer.$id, .equal, (customerBudget?.id)!)
+            .filter(\.$id, .equal, budgetHeader.id!)
             .first()
             .wait() else {
                 throw "Unwrap Failed"
         }
         
-        XCTAssertNotNil(fetchedBudgetHeader.id)
+        XCTAssertNotNil(fetchedBudgetHeader.id == budgetHeader.id)
         XCTAssertNotNil(fetchedBudgetHeader.$deliveryAddress.value?.$city.value == "Barcelona")
         XCTAssertNotNil(fetchedBudgetHeader.$deliveryAddress.value?.$address1.value == "Ps. Maragall 177")
         XCTAssertNotNil(fetchedBudgetHeader.$billingAddress.value?.$address1.value == "av.Diagonal 134")
@@ -387,10 +380,11 @@ final class AppTests: XCTestCase {
         XCTAssertNotNil(fetchedBudgetHeader.$customer.value?.$vat.value == "79871312Y")
         XCTAssertNotNil(fetchedBudgetHeader.$contactInfo.value?.$phone1.value == "696969696")
         XCTAssertNotNil(fetchedBudgetHeader.$paymentTerms.value?.$rate.value == "100")
+
         
-        
-        return (fetchedBudgetHeader.id)!
-        
+
+        return fetchedBudgetHeader.id!
+
     }
     
     func _pickUpProductToAddIntoBudgetId (description: String) throws -> Product  {
@@ -405,6 +399,7 @@ final class AppTests: XCTestCase {
         }
         
         XCTAssertNotNil(fetchedProduct.id)
+         
         
         return fetchedProduct
     }
@@ -428,6 +423,9 @@ final class AppTests: XCTestCase {
     func _checkBudget (budgetHeaderId: UUID ) throws  {
            
            //check that the budget is correctly store in the db
+        
+     
+        
         
            guard let fetchedBudget = try BudgetHeader
                .query(on: app.db)
@@ -455,49 +453,104 @@ final class AppTests: XCTestCase {
     
         try salesOrderHeader.save(on: app.db).wait()
         
-        return (salesOrderHeader.id!)
+        
+        
+        guard let fetchedSalesOrderHeader = try SalesOrderHeader
+            .query(on: app.db)
+            .filter(\.$id, .equal, salesOrderHeader.id!)
+            .first()
+            .wait() else {
+                throw "Unwrap Failed"
+        }
+        
+        XCTAssertNotNil(fetchedSalesOrderHeader.id == salesOrderHeader.id)
+        
+        return (fetchedSalesOrderHeader.id!)
     }
     
     
-    func _getAllAvailablePositionsForSalesOrderCreation(budgetHeaderIds : [UUID] ) throws {
+    func _getAllAvailablePositionsForSalesOrderCreation(budgetHeaderIds : [UUID] ) throws -> [salesOrderPosition] {
             
         var availableSalesOrdersPositions = [salesOrderPosition]()
         
+        for id in budgetHeaderIds{
+            
+            let fetchedBudgetPositions = try BudgetPositions.queryWithHeaderID(id: id, app: app)
+                .all()
+                .wait()
+            
+            
+            for i in 0...fetchedBudgetPositions.count-1 {
+                
+                for _ in 0...fetchedBudgetPositions[i].$quantityRequested.value! {
+                    
+                    availableSalesOrdersPositions.append(salesOrderPosition.init(
+                    _budgetHeaderId: id,
+                    _productName: fetchedBudgetPositions[i].product.name,
+                    _EAN: fetchedBudgetPositions[i].product.EAN,
+                    _photoURL: fetchedBudgetPositions[i].product.photoURL,
+                    _dimX: fetchedBudgetPositions[i].product.dimX,
+                    _dimY: fetchedBudgetPositions[i].product.dimY,
+                    _dimZ: fetchedBudgetPositions[i].product.dimZ,
+                    _weight: fetchedBudgetPositions[i].product.weight,
+                    _measureUnit: fetchedBudgetPositions[i].product.measureUnit,
+                    _quantitySold: fetchedBudgetPositions[i].quantitySold,
+                    _quantityStockout: fetchedBudgetPositions[i].quantityStockout,
+                    _netPricePerUnit: fetchedBudgetPositions[i].netPricePerUnit,
+                    _vatPerUnit: fetchedBudgetPositions[i].vatPerUnit,
+                    _costPerUnit: fetchedBudgetPositions[i].costPerUnit))
         
-        for i in 0...budgetHeaderIds.count-1{
-            
-            let fetchedBudgetPositions = BudgetPositions
-                .query(on: app.db)
-                .filter(\.$headerBudget.$id, .equal, budgetHeaderIds[i])
-                .with(\.$product)
-            
-            
-            
-            
-            //fetchedBudgetPositions.quantitySold.first (where: { $0.internalID == 0  })
-            /*
-            availableSalesOrdersPositions.append(salesOrderPosition.init(
-            _budgetHeaderId: budgetHeaderIds[i],
-            _productName: fetchedBudgetPositions.$product.name,
-            _EAN: fetchedBudgetPositions.product.EAN,
-            _photoURL: fetchedBudgetPositions.product.photoURL,
-            _dimX: fetchedBudgetPositions.product.dimX,
-            _dimY: fetchedBudgetPositions.product.dimY,
-            _dimZ: fetchedBudgetPositions.product.dimZ,
-            _weight: fetchedBudgetPositions.product.weight,
-            _measureUnit: fetchedBudgetPositions.product.measureUnit,
-            _quantitySold: fetchedBudgetPositions.quantitySold,
-            _quantityStockout: fetchedBudgetPositions.quantityStockout,
-            _netPricePerUnit: fetchedBudgetPositions.netPricePerUnit,
-            _vatPerUnit: fetchedBudgetPositions.vatPerUnit,
-            _costPerUnit: fetchedBudgetPositions.costPerUnit))
-            */
+                }
+                
+            }
+
         }
         
+        return availableSalesOrdersPositions
     }
         
         
+    func _createSalesOrderPositions ( salesOrderHeaderId : UUID , availableSalesOrdersPositions : [salesOrderPosition] ) throws {
         
+        // SOLO AÑADIR LAS POSICIONES QUE SE VENDIERON TEST: posicion 2 y 3 del budget 1 y posicion 1 del budget 2
+        
+        var j = 0
+        
+        for i in 4...15 {
+            
+            let salesOrderPositions = SalesOrderPositions (
+                id: UUID(),
+                salesOrderHeader_id: salesOrderHeaderId,
+                budgetHeaderId: availableSalesOrdersPositions[i]._budgetHeaderId,
+                internalID: j,
+                productName: availableSalesOrdersPositions[i]._productName,
+                EAN: availableSalesOrdersPositions[i]._EAN,
+                photoURL: availableSalesOrdersPositions[i]._photoURL,
+                dimX: availableSalesOrdersPositions[i]._dimX,
+                dimY: availableSalesOrdersPositions[i]._dimY,
+                dimZ: availableSalesOrdersPositions[i]._dimZ,
+                weight: availableSalesOrdersPositions[i]._weight,
+                measureUnit: availableSalesOrdersPositions[i]._measureUnit,
+                netPricePerUnit: availableSalesOrdersPositions[i]._netPricePerUnit,
+                vatPerUnit: availableSalesOrdersPositions[i]._vatPerUnit,
+                costPerUnit: availableSalesOrdersPositions[i]._costPerUnit)
+            
+            j+=1
+            
+            try salesOrderPositions.save(on: app.db).wait()
+        }
+        
+        
+        let fetchedSalesOrderPositions = try SalesOrderPositions
+            .query(on: app.db)
+            .filter(\.$salesOrderHeader.$id, .equal, salesOrderHeaderId)
+            .with(\.$salesOrderHeader)
+            .all()
+            .wait()
+        
+        XCTAssertNotNil(fetchedSalesOrderPositions[4].$budgetHeaderId.value! == salesOrderHeaderId)
+        
+    }
         
     
     

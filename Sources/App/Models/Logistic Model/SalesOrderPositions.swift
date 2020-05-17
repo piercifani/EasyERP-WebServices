@@ -16,6 +16,10 @@ final class SalesOrderPositions: Model {
     @Field(key: "budgetHeaderId")
     var budgetHeaderId: UUID
     
+    // InternalID
+    @Field(key: "internalID")
+    var internalID: Int
+    
     // product name.
     @Field(key: "productName")
     var productName: String
@@ -86,10 +90,11 @@ final class SalesOrderPositions: Model {
     // Creates a new, empty sales order
     init() { }
     
-    init(id: UUID? , salesOrderHeader_id: SalesOrderHeader.IDValue, budgetHeaderId: UUID, productName : String, EAN : String, photoURL : String , dimX : String , dimY: String, dimZ : String , weight : String, measureUnit : String , netPricePerUnit : String , vatPerUnit : String , costPerUnit : String) {
+    init(id: UUID? , salesOrderHeader_id: SalesOrderHeader.IDValue, budgetHeaderId: UUID, internalID : Int , productName : String, EAN : String, photoURL : String , dimX : String , dimY: String, dimZ : String , weight : String, measureUnit : String , netPricePerUnit : String , vatPerUnit : String , costPerUnit : String) {
         self.id = id
         self.$salesOrderHeader.id = salesOrderHeader_id
         self.budgetHeaderId = budgetHeaderId
+        self.internalID = internalID
         self.productName = productName
         self.EAN = EAN
         self.photoURL = photoURL

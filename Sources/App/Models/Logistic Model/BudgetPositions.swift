@@ -1,5 +1,6 @@
 import Foundation
 import Fluent
+import Vapor
 
 final class BudgetPositions: Model {
     // Name of the table or collection.
@@ -82,5 +83,17 @@ final class BudgetPositions: Model {
     }
 }
 
+extension BudgetPositions {
+    
+    static func queryWithHeaderID (id: UUID , app : Application) -> QueryBuilder <BudgetPositions> {
+        
+       return BudgetPositions
+        .query(on: app.db)
+        .filter(\.$headerBudget.$id, .equal, id)
+        .with(\.$product)
+        
+    }
+    
+}
 
   
