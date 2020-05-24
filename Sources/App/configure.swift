@@ -25,6 +25,8 @@ public func configure(_ app: Application) throws {
     app.migrations.add(CreateSalesOrderPositions())
     app.migrations.add(CreateDeliveryHeader())
     app.migrations.add(CreateDeliveryPositions())
+    app.migrations.add(CreateParcelHeader())
+    app.migrations.add(CreateParcelPositions())
     
     // register routes
     try routes(app)

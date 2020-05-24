@@ -88,13 +88,23 @@ final class AppTests: XCTestCase {
         let salesOrderHeaderId = try _createSalesOrderHeader(companyID: companyId , customerID:  customerId)
         try _createSalesOrderPositions( salesOrderHeaderId : salesOrderHeaderId , availableSalesOrdersPositions : availableSalesOrderPositions)
         
+        //CREATE DELIVERY
         
-        //crear delivery order1
+        //crear delivery order1 - de la sales order 1 - de dos budgets diferentes, mismo cliente
         var deliveryOrderHeaderId = try _createDeliveryHeader(companyID: companyId , salesOrderHeaderId:  salesOrderHeaderId)
         // posiciones seleccionadas de la sales order para crear la delivery order
         var selectedPositionsInternalId = [0,3,5,7,8,9]
+        try _createDeliveryPositions (salesOrderHeaderId : salesOrderHeaderId , deliveryHeaderId: deliveryOrderHeaderId, positionsInternalIdsFromTheSalesOrderPositions: selectedPositionsInternalId)
         
-        try _createDeliveryPositions (deliveryOrderHeaderId: deliveryOrderHeaderId, positionsInternalIdsFromTheSalesOrderPositions: selectedPositionsInternalId)
+        
+        //crear delivery Order2 - de la sales order 1  - de dos budgets diferentes, mismo cliente
+        deliveryOrderHeaderId = try _createDeliveryHeader(companyID: companyId , salesOrderHeaderId:  salesOrderHeaderId)
+        // posiciones seleccionadas de la sales order para crear la delivery order
+        selectedPositionsInternalId = [6,10]
+        try _createDeliveryPositions (salesOrderHeaderId : salesOrderHeaderId , deliveryHeaderId: deliveryOrderHeaderId, positionsInternalIdsFromTheSalesOrderPositions: selectedPositionsInternalId)
+        
+        
+        
         
         
     }
@@ -599,9 +609,35 @@ final class AppTests: XCTestCase {
         return (deliveryOrderHeaderId.id!)
     }
     
-    func _createDeliveryPositions ( deliveryOrderHeaderId : UUID , positionsInternalIdsFromTheSalesOrderPositions : [Int]) throws {
+    func _createDeliveryPositions ( salesOrderHeaderId : UUID , deliveryHeaderId : UUID , positionsInternalIdsFromTheSalesOrderPositions : [Int]) throws {
         
+        var j = 0
         
+        for idSalesOrderPos in positionsInternalIdsFromTheSalesOrderPositions {
+            
+            let fetchedSalesOrderPositionsInfo = try SalesOrderPositions
+            .query(on: app.db)
+            .filter(\.$salesOrderHeader.$id, .equal, salesOrderHeaderId)
+            .filter(\.$internalID, .equal, idSalesOrderPos)
+            .first()
+            .wait()
+            
+            let createDeliveryPosition = DeliveryPositions(id: nil, deliveryHeader_id: deliveryHeaderId, salesOrderPositionId: fetchedSalesOrderPositionsInfo!.id!, salesOrderPositionInternalId: idSalesOrderPos, salesOrderHeaderId: salesOrderHeaderId, budgetHeaderId: fetchedSalesOrderPositionsInfo!.budgetHeaderId, internalID: j, productName: fetchedSalesOrderPositionsInfo!.productName, EAN: fetchedSalesOrderPositionsInfo!.EAN, photoURL: fetchedSalesOrderPositionsInfo!.photoURL, dimX: fetchedSalesOrderPositionsInfo!.dimX, dimY: fetchedSalesOrderPositionsInfo!.dimY, dimZ: fetchedSalesOrderPositionsInfo!.dimZ, weight: fetchedSalesOrderPositionsInfo!.weight, measureUnit: fetchedSalesOrderPositionsInfo!.measureUnit, netPricePerUnit: fetchedSalesOrderPositionsInfo!.netPricePerUnit, vatPerUnit: fetchedSalesOrderPositionsInfo!.vatPerUnit, costPerUnit: fetchedSalesOrderPositionsInfo!.costPerUnit, expectedDeliveryDate: fetchedSalesOrderPositionsInfo!.expectedDeliveryDate)
+            try createDeliveryPosition.save(on: app.db).wait()
+            j+=1
+            
+        }
+    
+        
+       guard let fetchedDeliveryPosition = try DeliveryPositions
+        .query(on: app.db)
+        .filter(\.$internalID, .equal, 1)
+        .first()
+        .wait() else {
+                throw "Unwrap Failed"
+        }
+        
+        XCTAssertNotNil(fetchedDeliveryPosition.productName)
         
     }
     
