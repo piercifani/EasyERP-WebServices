@@ -23,6 +23,8 @@ public func configure(_ app: Application) throws {
     app.migrations.add(CreateBudgetPositions())
     app.migrations.add(CreateSalesOrderHeader())
     app.migrations.add(CreateSalesOrderPositions())
+    app.migrations.add(CreateDeliveryHeader())
+    app.migrations.add(CreateDeliveryPositions())
     
     // register routes
     try routes(app)

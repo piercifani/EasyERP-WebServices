@@ -1,11 +1,11 @@
 import Foundation
 import Fluent
 
-final class SalesOrderHeader: Model {
+final class DeliveryHeader: Model {
     // Name of the table or collection.
-    static let schema = "salesOrderHeader"
+    static let schema = "deliveryHeader"
     
-    // Unique identifier for this salesOrder.
+    // Unique identifier for this delivery.
     @ID(key: .id)
     var id: UUID?
     
@@ -76,34 +76,6 @@ final class SalesOrderHeader: Model {
     @Field(key: "deliveryCountryCode")
     var deliveryCountryCode: String
     
-    //UNIQUE BILLING ADDRESS FOR THE SALES ORDER
-    
-    // billing Address1
-    @Field(key: "billingAddress1")
-    var billingAddress1: String
-    
-    // billing Address2
-    @Field(key: "billingAddress2")
-    var billingAddress2: String
-    
-    // billing ZipCode
-    @Field(key: "billingZipCode")
-    var billingZipCode: String
-    
-    // billing City
-    @Field(key: "billingCity")
-    var billingCity: String
-    
-    // billing zoneCode
-    @Field(key: "billingZoneCode")
-    var billingZoneCode: String
-    
-    // billing CountryCode
-    @Field(key: "billingCountryCode")
-    var billingCountryCode: String
-    
-    //-----------------------------
-    
     //Creation Date
     @Field(key: "creationDate")
     var creationDate: Date
@@ -115,20 +87,21 @@ final class SalesOrderHeader: Model {
     @Parent(key: "company_id")
     var company: Company
     
-    @Children(for: \.$salesOrderHeader)
-    var salesOrderPositions: [SalesOrderPositions]
+    @Parent(key: "salesOrderHeader_id")
+    var salesOrderHeader: SalesOrderHeader
     
-    @Children(for: \.$salesOrderHeader)
-    var deliveryHeader: [DeliveryHeader]
+    @Children(for: \.$deliveryHeader)
+    var deliveryPositions: [DeliveryPositions]
     
     // Creates a new, empty sales order
     init() { }
     
-    init(id: UUID? , company_id: Company.IDValue , customerId: UUID,customerName : String, customerVatNumber : String, contactInfoName: String, contactInfoLastName : String, contactInfoPhone1 : String, contactInfoPhone2 : String, contactInfoEmail1 : String , contactInfoEmail2 : String, deliveryAddress1 : String , deliveryAddress2 : String , deliveryZipCode : String , deliveryCity : String , deliveryZoneCode : String , deliveryCountryCode : String , billingAddress1 : String , billingAddress2 : String , billingZipCode : String ,  billingCity : String , billingZoneCode : String , billingCountryCode :String ) {
+    init(id: UUID? , company_id: Company.IDValue , salesOrderHeader_id : SalesOrderHeader.IDValue, customerId: UUID,customerName : String, customerVatNumber : String, contactInfoName: String, contactInfoLastName : String, contactInfoPhone1 : String, contactInfoPhone2 : String, contactInfoEmail1 : String , contactInfoEmail2 : String, deliveryAddress1 : String , deliveryAddress2 : String , deliveryZipCode : String , deliveryCity : String , deliveryZoneCode : String , deliveryCountryCode : String ) {
         
         
         self.id = id
         self.$company.id = company_id
+        self.$salesOrderHeader.id = salesOrderHeader_id
         
         self.customerId = customerId
         self.customerName = customerName
@@ -147,13 +120,6 @@ final class SalesOrderHeader: Model {
         self.deliveryCity = deliveryCity
         self.deliveryZoneCode = deliveryZoneCode
         self.deliveryCountryCode = deliveryCountryCode
-        
-        self.billingAddress1 = billingAddress1
-        self.billingAddress2 = billingAddress2
-        self.billingZipCode = billingZipCode
-        self.billingCity = billingCity
-        self.billingZoneCode = billingZoneCode
-        self.billingCountryCode = billingCountryCode
         
         self.creationDate = Date()
         self.modificationDate = Date()

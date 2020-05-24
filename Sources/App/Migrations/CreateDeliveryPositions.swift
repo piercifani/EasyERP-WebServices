@@ -1,13 +1,16 @@
 import Foundation
 import Fluent
 
-struct CreateSalesOrderPositions: Migration {
+struct CreateDeliveryPositions: Migration {
     // Prepares the database for storing Galaxy models.
     func prepare(on database: Database) -> EventLoopFuture<Void> {
-        database.schema("salesOrderPositions")
+        database.schema("deliveryPositions")
             .id()
             .field("budgetHeaderId", .uuid)
-            .field("internalID", .uuid)
+            .field("salesOrderPositionId", .uuid)
+            .field("salesOrderPositionInternalId", .uuid)
+            .field("salesOrderHeaderId", .uuid)
+            .field("internalID", .int)
             .field("productName", .string)
             .field("EAN", .string)
             .field("dimX", .string)
@@ -26,12 +29,12 @@ struct CreateSalesOrderPositions: Migration {
             .field("realDeliveryDate", .date)
             .field("creationDate", .date)
             .field("modificationDate", .date)
-            .field("salesOrderHeader_id", .uuid, .references("salesOrderHeader", "id"))
+            .field("deliveryHeader_id", .uuid, .references("deliveryHeader", "id"))
             .create()
     }
     
     // Optionally reverts the changes made in the prepare method.
     func revert(on database: Database) -> EventLoopFuture<Void> {
-        database.schema("salesOrderPositions").delete()
+        database.schema("deliveryPositions").delete()
     }
 }

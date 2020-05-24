@@ -1,16 +1,28 @@
 import Foundation
 import Fluent
 
-final class SalesOrderPositions: Model {
+final class DeliveryPositions: Model {
     // Name of the table or collection.
-    static let schema = "SalesOrderPositions"
+    static let schema = "deliveryPositions"
     
     // Unique identifier for this salesOrder.
     @ID(key: .id)
     var id: UUID?
     
-    @Parent(key: "salesOrderHeader_id")
-    var salesOrderHeader: SalesOrderHeader
+    @Parent(key: "deliveryHeader_id")
+    var deliveryHeader: DeliveryHeader
+    
+    // salesOrderPositionID
+    @Field(key: "salesOrderPositionId")
+    var salesOrderPositionId: UUID
+
+    // salesOrderPositionID
+    @Field(key: "salesOrderPositionInternalId")
+    var salesOrderPositionInternalId: Int
+    
+    // budgetHeaderID
+    @Field(key: "salesOrderHeaderId")
+    var salesOrderHeaderId: UUID
     
     // budgetHeaderID
     @Field(key: "budgetHeaderId")
@@ -70,11 +82,11 @@ final class SalesOrderPositions: Model {
     @Field(key: "costPerUnit")
     var costPerUnit: String
     
-    //expected Delivery Date
+    //expected delivery Date from the budget
     @Field(key: "expectedDeliveryDate")
     var expectedDeliveryDate: Date
     
-    //expected Delivery Date
+    //expected delivery Date from the budget
     @Field(key: "realDeliveryDate")
     var realDeliveryDate: Date
     
@@ -87,6 +99,7 @@ final class SalesOrderPositions: Model {
     var modificationDate: Date
     
     
+ 
     
     //PARCEL
     
@@ -97,10 +110,14 @@ final class SalesOrderPositions: Model {
     // Creates a new, empty sales order
     init() { }
     
-    init(id: UUID? , salesOrderHeader_id: SalesOrderHeader.IDValue, budgetHeaderId: UUID, internalID : Int , productName : String, EAN : String, photoURL : String , dimX : String , dimY: String, dimZ : String , weight : String, measureUnit : String , netPricePerUnit : String , vatPerUnit : String , costPerUnit : String , expectedDeliveryDate : Date) {
+    init(id: UUID? , deliveryHeader_id: DeliveryHeader.IDValue, salesOrderPositionId : UUID , salesOrderPositionInternalId : Int , salesOrderHeaderId : UUID , budgetHeaderId: UUID, internalID : Int , productName : String, EAN : String, photoURL : String , dimX : String , dimY: String, dimZ : String , weight : String, measureUnit : String , netPricePerUnit : String , vatPerUnit : String , costPerUnit : String , expectedDeliveryDate: Date) {
         self.id = id
-        self.$salesOrderHeader.id = salesOrderHeader_id
+        self.$deliveryHeader.id = deliveryHeader_id
+        
         self.budgetHeaderId = budgetHeaderId
+        self.salesOrderPositionId = salesOrderPositionId
+        self.salesOrderPositionInternalId = salesOrderPositionInternalId
+        
         self.internalID = internalID
         self.productName = productName
         self.EAN = EAN
@@ -117,8 +134,8 @@ final class SalesOrderPositions: Model {
         self.vatPerUnit = vatPerUnit
         self.costPerUnit = costPerUnit
         self.expectedDeliveryDate = expectedDeliveryDate
-        self.realDeliveryDate = Date () // preguntar a pier: como se guarda en nil?
         self.creationDate = Date()
         self.modificationDate = Date()
+        self.realDeliveryDate = Date()
     }
 }

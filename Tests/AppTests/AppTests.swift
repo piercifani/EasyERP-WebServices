@@ -38,6 +38,7 @@ final class AppTests: XCTestCase {
         var _netPricePerUnit: String
         var _vatPerUnit: String
         var _costPerUnit: String
+        var _expectedDeliveryDate : Date
     }
     
     func testCreateCompany() throws {
@@ -86,6 +87,15 @@ final class AppTests: XCTestCase {
         let availableSalesOrderPositions = try _getAllAvailablePositionsForSalesOrderCreation (budgetHeaderIds: availableBudgets)
         let salesOrderHeaderId = try _createSalesOrderHeader(companyID: companyId , customerID:  customerId)
         try _createSalesOrderPositions( salesOrderHeaderId : salesOrderHeaderId , availableSalesOrdersPositions : availableSalesOrderPositions)
+        
+        
+        //crear delivery order1
+        var deliveryOrderHeaderId = try _createDeliveryHeader(companyID: companyId , salesOrderHeaderId:  salesOrderHeaderId)
+        // posiciones seleccionadas de la sales order para crear la delivery order
+        var selectedPositionsInternalId = [0,3,5,7,8,9]
+        
+        try _createDeliveryPositions (deliveryOrderHeaderId: deliveryOrderHeaderId, positionsInternalIdsFromTheSalesOrderPositions: selectedPositionsInternalId)
+        
         
     }
     
@@ -475,6 +485,14 @@ final class AppTests: XCTestCase {
         
         for id in budgetHeaderIds{
             
+            guard let fetchedDataFromHeaderToGoInThePositions = try BudgetHeader
+                       .query(on: app.db)
+                       .filter(\.$id, .equal, id)
+                       .first()
+                       .wait() else {
+                           throw "Unwrap Failed"
+                   }
+            
             let fetchedBudgetPositions = try BudgetPositions.queryWithHeaderID(id: id, app: app)
                 .all()
                 .wait()
@@ -498,7 +516,8 @@ final class AppTests: XCTestCase {
                     _quantityStockout: fetchedBudgetPositions[i].quantityStockout,
                     _netPricePerUnit: fetchedBudgetPositions[i].netPricePerUnit,
                     _vatPerUnit: fetchedBudgetPositions[i].vatPerUnit,
-                    _costPerUnit: fetchedBudgetPositions[i].costPerUnit))
+                    _costPerUnit: fetchedBudgetPositions[i].costPerUnit ,
+                    _expectedDeliveryDate: fetchedDataFromHeaderToGoInThePositions.expectedDate))
         
                 }
                 
@@ -533,7 +552,8 @@ final class AppTests: XCTestCase {
                 measureUnit: availableSalesOrdersPositions[i]._measureUnit,
                 netPricePerUnit: availableSalesOrdersPositions[i]._netPricePerUnit,
                 vatPerUnit: availableSalesOrdersPositions[i]._vatPerUnit,
-                costPerUnit: availableSalesOrdersPositions[i]._costPerUnit)
+                costPerUnit: availableSalesOrdersPositions[i]._costPerUnit,
+                expectedDeliveryDate: availableSalesOrdersPositions[i]._expectedDeliveryDate)
             
             j+=1
             
@@ -552,7 +572,38 @@ final class AppTests: XCTestCase {
         
     }
         
+    func _createDeliveryHeader (companyID: UUID , salesOrderHeaderId : UUID) throws -> UUID {
+        
+        let fetchedSalesOrderHeaderInfo = try SalesOrderHeader
+        .query(on: app.db)
+        .filter(\.$id, .equal, salesOrderHeaderId)
+        .first()
+        .wait()
+        
+        XCTAssertNotNil(fetchedSalesOrderHeaderInfo?.customerName == "testName")
+        
+        let deliveryOrderHeaderId = DeliveryHeader(id: nil, company_id: companyID, salesOrderHeader_id: salesOrderHeaderId, customerId: fetchedSalesOrderHeaderInfo!.customerId, customerName: fetchedSalesOrderHeaderInfo!.customerName, customerVatNumber: fetchedSalesOrderHeaderInfo!.customerVatNumber, contactInfoName: fetchedSalesOrderHeaderInfo!.contactInfoName, contactInfoLastName: fetchedSalesOrderHeaderInfo!.contactInfoLastName, contactInfoPhone1: fetchedSalesOrderHeaderInfo!.contactInfoPhone1, contactInfoPhone2: fetchedSalesOrderHeaderInfo!.contactInfoPhone2, contactInfoEmail1: fetchedSalesOrderHeaderInfo!.contactInfoEmail1, contactInfoEmail2: fetchedSalesOrderHeaderInfo!.contactInfoEmail2, deliveryAddress1: fetchedSalesOrderHeaderInfo!.deliveryAddress1, deliveryAddress2: fetchedSalesOrderHeaderInfo!.deliveryAddress2, deliveryZipCode: fetchedSalesOrderHeaderInfo!.billingZipCode, deliveryCity: fetchedSalesOrderHeaderInfo!.deliveryCity, deliveryZoneCode: fetchedSalesOrderHeaderInfo!.billingZoneCode, deliveryCountryCode: fetchedSalesOrderHeaderInfo!.billingCountryCode)
+        try deliveryOrderHeaderId.save(on: app.db).wait()
+        
+        
+        
+        let fetchedDeliveryOrderHeader = try DeliveryHeader
+        .query(on: app.db)
+        .filter(\.$id, .equal, deliveryOrderHeaderId.id!)
+        .first()
+        .wait()
+        
+        XCTAssertNotNil(fetchedDeliveryOrderHeader?.customerName == "testName")
+        XCTAssertNotNil(fetchedDeliveryOrderHeader?.$salesOrderHeader.id == salesOrderHeaderId)
+        
+        return (deliveryOrderHeaderId.id!)
+    }
     
+    func _createDeliveryPositions ( deliveryOrderHeaderId : UUID , positionsInternalIdsFromTheSalesOrderPositions : [Int]) throws {
+        
+        
+        
+    }
     
     /*func _getBudgetsInStatus(customerID : UUID , Status : String) throws -> BudgetHeader {
         
