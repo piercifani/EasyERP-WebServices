@@ -104,6 +104,9 @@ final class AppTests: XCTestCase {
         try _createDeliveryPositions (salesOrderHeaderId : salesOrderHeaderId , deliveryHeaderId: deliveryOrderHeaderId, positionsInternalIdsFromTheSalesOrderPositions: selectedPositionsInternalId)
         
         
+        //CREATE PARCELS
+        
+        let parcelHeaderId = try _createParcelHeader(companyID: companyId , deliveryOrderHeaderId : deliveryOrderHeaderId)
         
         
         
@@ -640,6 +643,35 @@ final class AppTests: XCTestCase {
         XCTAssertNotNil(fetchedDeliveryPosition.productName)
         
     }
+    
+    func _createParcelHeader (companyID: UUID , deliveryOrderHeaderId : UUID) throws -> UUID {
+    
+        let fetchedDeliveryHeaderInfo = try DeliveryHeader
+        .query(on: app.db)
+        .filter(\.$id, .equal, deliveryOrderHeaderId)
+        .first()
+        .wait()
+        
+        
+        let ParcelHeaderId = ParcelHeader(id: nil, company_id: companyID, deliveryHeader_id: deliveryOrderHeaderId, customerId: fetchedDeliveryHeaderInfo!.customerId, customerName: fetchedDeliveryHeaderInfo!.customerName, customerVatNumber: fetchedDeliveryHeaderInfo!.customerVatNumber, contactInfoName: fetchedDeliveryHeaderInfo!.contactInfoName, contactInfoLastName: fetchedDeliveryHeaderInfo!.contactInfoLastName, contactInfoPhone1: fetchedDeliveryHeaderInfo!.contactInfoPhone1, contactInfoPhone2: fetchedDeliveryHeaderInfo!.contactInfoPhone2, contactInfoEmail1: fetchedDeliveryHeaderInfo!.contactInfoEmail1, contactInfoEmail2: fetchedDeliveryHeaderInfo!.contactInfoEmail2, deliveryAddress1: fetchedDeliveryHeaderInfo!.deliveryAddress1, deliveryAddress2: fetchedDeliveryHeaderInfo!.deliveryAddress2, deliveryZipCode: fetchedDeliveryHeaderInfo!.deliveryZipCode, deliveryCity: fetchedDeliveryHeaderInfo!.deliveryCity, deliveryZoneCode: fetchedDeliveryHeaderInfo!.deliveryZoneCode, deliveryCountryCode: fetchedDeliveryHeaderInfo!.deliveryCountryCode, trackingNumber: "", parcelStatus: "CREATED", carrierName: "", carrierService: "", expectedDeliveryDate: Date())
+        try ParcelHeaderId.save(on: app.db).wait()
+        
+        
+        
+        guard let fetchedParcelHeader = try ParcelHeader
+        .query(on: app.db)
+        .filter(\.$id, .equal, ParcelHeaderId.id!)
+        .first()
+        .wait() else {
+                throw "Unwrap Failed"
+        }
+        
+        XCTAssertNotNil(ParcelHeaderId.id! == fetchedParcelHeader.id)
+        
+        
+        return fetchedParcelHeader.id!
+    }
+    
     
     /*func _getBudgetsInStatus(customerID : UUID , Status : String) throws -> BudgetHeader {
         
